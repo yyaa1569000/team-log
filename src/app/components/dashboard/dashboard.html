@@ -1,0 +1,56 @@
+<div class="dashboard-container">
+  <!-- 側邊導覽列 -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h2>TeamLog</h2>
+      <span>Workspace</span>
+    </div>
+    <ul class="nav-links">
+      <li class="active"><a href="#">📊 儀表板總覽</a></li>
+      <li><a href="#">📝 工作日誌</a></li>
+      <li><a href="#">👥 團隊成員</a></li>
+      <li><a href="#">⚙️ 系統設定</a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <button class="btn-logout" (click)="logout()">登出系統</button>
+    </div>
+  </aside>
+
+  <!-- 主內容區 -->
+  <main class="main-content">
+    <header class="top-bar">
+      <h1>歡迎回來，管理者</h1>
+      <div class="user-profile">
+        <span class="avatar">👨‍💻</span>
+        <span class="username">Admin</span>
+      </div>
+    </header>
+
+    <section class="content-body">
+      <div class="card-grid">
+        <div class="stat-card">
+          <h3>今日日誌數</h3>
+          <p class="stat-number">12</p>
+        </div>
+        <div class="stat-card">
+          <h3>團隊線上人數</h3>
+          <p class="stat-number">5</p>
+        </div>
+        <div class="stat-card">
+          <h3>待辦事項</h3>
+          <p class="stat-number">3</p>
+        </div>
+      </div>
+
+      <div class="recent-logs">
+        <h2>近期團隊動態</h2>
+        <div class="log-item">
+          <span class="log-author">王小明</span> 提交了今日工作日誌 <span class="log-time">10分鐘前</span>
+        </div>
+        <div class="log-item">
+          <span class="log-author">李大華</span> 更新了專案進度 <span class="log-time">1小時前</span>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>

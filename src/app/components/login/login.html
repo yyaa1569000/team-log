@@ -1,0 +1,30 @@
+<div class="login-container">
+  <div class="login-card">
+    <div class="logo-area">
+      <h2>TeamLog</h2>
+      <p class="subtitle">團隊協作與日誌管理系統</p>
+    </div>
+
+    <!-- <form (submit)="$event.preventDefault()"> -->
+        <form (submit)="$event.preventDefault()">
+      <div class="form-group">
+        <label for="email">電子郵件</label>
+        <input type="email" id="email" placeholder="name@company.com" required>
+      </div>
+
+      <div class="form-group">
+        <label for="password">密碼</label>
+        <input type="password" id="password" placeholder="請輸入密碼" required>
+      </div>
+
+      <div class="form-actions">
+        <label class="remember-me">
+          <input type="checkbox"> 記住我
+        </label>
+        <a href="#" class="forgot-password">忘記密碼？</a>
+      </div>
+
+      <button type="submit" class="btn-submit" (click)="onLogin()">直接按登入跳轉</button>
+    </form>
+  </div>
+</div>
