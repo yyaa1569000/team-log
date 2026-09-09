@@ -168,3 +168,49 @@
   color: #a0aec0;
   font-size: 12px;
 }
+
+/* ==========================================
+   📱 響應式 RWD 補強（僅針對螢幕寬度 <= 768px）
+   ========================================== */
+@media (max-width: 768px) {
+  .dashboard-container {
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .sidebar {
+    width: 100%;
+    padding: 16px;
+  }
+
+  .nav-links {
+    margin: 16px 0;
+    display: flex;
+    overflow-x: auto;
+    gap: 8px;
+  }
+
+  .nav-links li {
+    margin-bottom: 0;
+    white-space: nowrap;
+  }
+
+  .nav-links a {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+
+  .top-bar {
+    padding: 16px 20px;
+  }
+
+  .content-body {
+    padding: 20px;
+  }
+
+  .card-grid {
+    grid-template-columns: 1fr; /* 手機版 3 欄變 1 欄 */
+    gap: 12px;
+  }
+}

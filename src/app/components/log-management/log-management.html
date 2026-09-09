@@ -1,55 +1,96 @@
 <div class="log-manager">
   <h2>📝 工作日誌管理</h2>
 
-  <!-- 新增日誌表單 -->
-  <form (submit)="onSubmit($event)" class="log-form">
-    <h3>新增今日日誌</h3>
-    <div class="form-row">
-      <input type="text" [(ngModel)]="title" name="title" placeholder="日誌標題（例如：修復登入頁錯誤）" required>
-      <select [(ngModel)]="category" name="category">
-        <option value="開發">開發</option>
-        <option value="會議">會議</option>
-        <option value="測試">測試</option>
-        <option value="其他">其他</option>
+  <!-- 提示訊息 -->
+  @if (toastMessage()) {
+    <div class="toast-success">
+      {{ toastMessage() }}
+    </div>
+  }
+
+<!-- 新增日誌表單 -->
+  <div class="log-form-card">
+    <h3>新增工作日誌</h3>
+    
+    <div class="form-group">
+      <label>標題 <span class="required">*</span></label>
+      <input 
+        type="text" 
+        [value]="newTitle()" 
+        (input)="newTitle.set($any($event.target).value)"
+        placeholder="例如：修改登入表單"
+        [class.is-invalid]="showErrors() && !newTitle()"
+      />
+      @if (showErrors() && !newTitle()) {
+        <span class="error-text">請輸入日誌標題</span>
+      }
+    </div>
+
+    <div class="form-group">
+      <label>分類</label>
+      <select [value]="newCategory()" (change)="newCategory.set($any($event.target).value)">
+        <option value="開發">💻 開發</option>
+        <option value="會議">🤝 會議</option>
+        <option value="企劃">📄 企劃</option>
+        <option value="除錯">🐛 除錯</option>
       </select>
     </div>
-    <textarea [(ngModel)]="content" name="content" placeholder="詳細工作內容說明..." rows="3" required></textarea>
-    <button type="submit" class="btn-primary">發布日誌</button>
-  </form>
 
-  <!-- 搜尋與篩選列 -->
-  <div class="filter-bar">
-    <input 
-      type="text" 
-      [value]="logService.searchQuery()" 
-      (input)="onSearchInput($event)" 
-      placeholder="搜尋標題或內容關鍵字..." 
-      class="search-input">
-    
-    <div class="category-filters">
-      @let currentCat = logService.selectedCategory();
-      <button [class.active]="currentCat === '全部'" (click)="setCategory('全部')">全部</button>
-      <button [class.active]="currentCat === '開發'" (click)="setCategory('開發')">開發</button>
-      <button [class.active]="currentCat === '會議'" (click)="setCategory('會議')">會議</button>
-      <button [class.active]="currentCat === '測試'" (click)="setCategory('測試')">測試</button>
-      <button [class.active]="currentCat === '其他'" (click)="setCategory('其他')">其他</button>
+    <div class="form-group">
+      <label>詳細內容 <span class="required">*</span></label>
+      <textarea 
+        rows="3" 
+        [value]="newContent()" 
+        (input)="newContent.set($any($event.target).value)"
+        placeholder="請說明今天完成的工作項目細節..."
+        [class.is-invalid]="showErrors() && !newContent()"
+      ></textarea>
+      @if (showErrors() && !newContent()) {
+        <span class="error-text">請輸入工作內容</span>
+      }
     </div>
+
+    <button class="btn-submit" (click)="submitLog()">提交日誌</button>
   </div>
 
-  <!-- 日誌列表 (改用 filteredLogs) -->
-  <div class="log-list">
-    <h3>日誌清單 (共 {{ logService.filteredLogs().length }} 筆)</h3>
-    @if (logService.filteredLogs().length === 0) {
-      <p class="empty-text">找不到符合條件的工作日誌。</p>
-    }
-    @for (log of logService.filteredLogs(); track log.id) {
-      <div class="log-card-item">
-        <div class="log-header-info">
-          <span class="badge" [class]="log.category">{{ log.category }}</span>
-          <span class="log-title">{{ log.title }}</span>
-          <span class="log-date">{{ log.date }}</span>
-        </div>
-        <p class="log-desc">{{ log.content }}</p>
+<!-- 日誌列表 -->
+  <div class="log-list-section">
+    <h3>團隊日誌列表</h3>
+
+    <!-- 關鍵字搜尋與篩選列 -->
+    <div class="filter-bar">
+      <input 
+        type="text" 
+        placeholder="🔍 搜尋標題或內容..." 
+        [value]="searchQuery()" 
+        (input)="searchQuery.set($any($event.target).value)"
+      />
+      <select [value]="selectedCategory()" (change)="selectedCategory.set($any($event.target).value)">
+        <option value="全部">全部分類</option>
+        <option value="開發">💻 開發</option>
+        <option value="會議">🤝 會議</option>
+        <option value="企劃">📄 企劃</option>
+        <option value="除錯">🐛 除錯</option>
+      </select>
+    </div>
+
+    <!-- 列表展示與空狀態處理 -->
+    @if (filteredLogs().length > 0) {
+      <div class="log-grid">
+        @for (log of filteredLogs(); track log.id) {
+          <div class="log-card">
+            <div class="log-header">
+              <span class="category-badge">{{ log.category }}</span>
+              <span class="log-date">{{ log.date }}</span>
+            </div>
+            <h4>{{ log.title }}</h4>
+            <p>{{ log.content }}</p>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="empty-state">
+        <p>📭 查無符合條件的工作日誌</p>
       </div>
     }
   </div>

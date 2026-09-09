@@ -112,3 +112,16 @@
 .btn-submit:active {
   transform: scale(0.98);
 }
+
+/* ==========================================
+   📱 響應式 RWD 補強（僅針對螢幕寬度 <= 480px）
+   ========================================== */
+@media (max-width: 480px) {
+  .login-container {
+    padding: 16px; /* 防止極小螢幕貼邊 */
+  }
+
+  .login-card {
+    padding: 24px 20px; /* 手機上內距稍微收緊 */
+  }
+}

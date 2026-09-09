@@ -1,20 +1,31 @@
-import { Component } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [],
+  imports: [FormsModule],
   templateUrl: './login.html',
-  styleUrl: './login.css',
+  styleUrl: './login.css'
 })
 export class Login {
-  // 注入 Router
-  constructor(private router: Router) {}
+  private router = inject(Router);
+
+  email = signal('');
+  password = signal('');
+  errorMessage = signal('');
 
   onLogin() {
-    // 這裡未來可以加驗證，目前先直接跳轉到 dashboard
-    console.log('按鈕被點擊了');
+    // 檢查欄位是否填寫
+    if (!this.email().trim() || !this.password().trim()) {
+      this.errorMessage.set('請輸入電子郵件與密碼！');
+      return;
+    }
+
+    // 寫入登入狀態並跳轉
+    localStorage.setItem('isLoggedIn', 'true');
+    this.errorMessage.set('');
     this.router.navigate(['/dashboard']);
   }
 }

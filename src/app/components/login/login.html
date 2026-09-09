@@ -4,17 +4,38 @@
       <h2>TeamLog</h2>
       <p class="subtitle">團隊協作與日誌管理系統</p>
     </div>
+    
+    <!-- 1. 補上顯示錯誤訊息的區塊 -->
+    @if (errorMessage()) {
+      <div style="color: #e53e3e; background: #fff5f5; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 14px; text-align: center;">
+        {{ errorMessage() }}
+      </div>
+    }
 
-    <!-- <form (submit)="$event.preventDefault()"> -->
-        <form (submit)="$event.preventDefault()">
+    <!-- 2. 將提交事件統一交給 (ngSubmit) 處理 -->
+    <form (ngSubmit)="onLogin()">
       <div class="form-group">
         <label for="email">電子郵件</label>
-        <input type="email" id="email" placeholder="name@company.com" required>
+        <!-- 3. 補上 input 值寫回 Signal 的事件 -->
+        <input 
+          type="email" 
+          id="email" 
+          placeholder="name@company.com" 
+          [value]="email()" 
+          (input)="email.set($any($event.target).value)"
+        >
       </div>
 
       <div class="form-group">
         <label for="password">密碼</label>
-        <input type="password" id="password" placeholder="請輸入密碼" required>
+        <!-- 4. 補上 input 值寫回 Signal 的事件 -->
+        <input 
+          type="password" 
+          id="password" 
+          placeholder="請輸入密碼" 
+          [value]="password()" 
+          (input)="password.set($any($event.target).value)"
+        >
       </div>
 
       <div class="form-actions">
@@ -24,7 +45,7 @@
         <a href="#" class="forgot-password">忘記密碼？</a>
       </div>
 
-      <button type="submit" class="btn-submit" (click)="onLogin()">直接按登入跳轉</button>
+      <button type="submit" class="btn-submit">登入</button>
     </form>
   </div>
 </div>

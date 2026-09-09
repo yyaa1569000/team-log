@@ -17,7 +17,8 @@ export class Dashboard {
   switchTab(tab: string) {
     this.currentTab = tab;
   }
-  logout() {
-    this.router.navigate(['/']);
-  }
+logout() {
+  localStorage.removeItem('isLoggedIn');
+  this.router.navigate(['/login']);
+}
 }
