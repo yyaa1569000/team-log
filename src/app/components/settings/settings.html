@@ -1,0 +1,19 @@
+<div class="settings-container">
+  <h2>⚙️ 系統設定</h2>
+
+  <div class="settings-card">
+    <h3>工作區設定</h3>
+    <div class="setting-item">
+      <label>工作區名稱</label>
+      <input type="text" [(ngModel)]="workspaceName" placeholder="輸入工作區名稱">
+    </div>
+    <div class="setting-item">
+      <label>每日日誌提醒</label>
+      <input type="checkbox" [(ngModel)]="notificationsEnabled"> 啟用推播通知
+    </div>
+    <button class="btn-save" (click)="saveSettings()">儲存變更</button>
+    @if (savedMessage) {
+      <p class="success-msg">{{ savedMessage }}</p>
+    }
+  </div>
+</div>

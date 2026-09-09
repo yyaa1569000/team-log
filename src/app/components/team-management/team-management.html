@@ -1,0 +1,17 @@
+<div class="team-manager">
+  <h2>👥 團隊成員列表</h2>
+  <div class="member-grid">
+    @for (member of teamService.members(); track member.id) {
+      <div class="member-card">
+        <div class="member-avatar">{{ member.avatar }}</div>
+        <div class="member-info">
+          <h3>{{ member.name }}</h3>
+          <p class="role">{{ member.role }}</p>
+          <span class="status-badge" [class]="member.status">
+            {{ member.status === 'online' ? '線上' : member.status === 'busy' ? '忙碌中' : '離線' }}
+          </span>
+        </div>
+      </div>
+    }
+  </div>
+</div>

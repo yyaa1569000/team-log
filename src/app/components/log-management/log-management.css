@@ -1,0 +1,121 @@
+.log-manager {
+  max-width: 800px;
+  margin: 0 auto;
+  font-family: inherit;
+}
+.log-form {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 24px;
+}
+.form-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.form-row input, .form-row select, .log-form textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  font-size: 14px;
+}
+.log-form textarea {
+  margin-bottom: 12px;
+  resize: vertical;
+}
+.btn-primary {
+  background-color: #3182ce;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-primary:hover {
+  background-color: #2b6cb0;
+}
+.log-card-item {
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 12px;
+}
+.log-header-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.log-title {
+  font-weight: 600;
+  color: #2d3748;
+  flex-grow: 1;
+}
+.log-date {
+  font-size: 12px;
+  color: #a0aec0;
+}
+.log-desc {
+  margin: 0;
+  color: #4a5568;
+  font-size: 14px;
+}
+.badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #edf2f7;
+  color: #4a5568;
+  font-weight: 600;
+}
+/* 搜尋與篩選列 */
+.filter-bar {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.search-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+.category-filters {
+  display: flex;
+  gap: 8px;
+}
+.category-filters button {
+  padding: 6px 14px;
+  border: 1px solid #cbd5e0;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #4a5568;
+  transition: all 0.2s;
+}
+.category-filters button:hover {
+  background: #edf2f7;
+}
+.category-filters button.active {
+  background: #3182ce;
+  color: white;
+  border-color: #3182ce;
+  font-weight: 600;
+}
+.empty-text {
+  color: #a0aec0;
+  text-align: center;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}

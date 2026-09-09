@@ -1,0 +1,59 @@
+.team-manager {
+  max-width: 800px;
+  margin: 0 auto;
+  font-family: inherit;
+}
+.member-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-top: 20px;
+}
+.member-card {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+.member-avatar {
+  font-size: 36px;
+  background: #edf2f7;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+.member-info h3 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  color: #2d3748;
+}
+.role {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  color: #718096;
+}
+.status-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+.status-badge.online {
+  background: #c6f6d5;
+  color: #22543d;
+}
+.status-badge.busy {
+  background: #feebc8;
+  color: #744210;
+}
+.status-badge.offline {
+  background: #edf2f7;
+  color: #4a5568;
+}
