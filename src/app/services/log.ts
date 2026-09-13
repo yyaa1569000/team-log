@@ -1,44 +1,67 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { catchError, tap } from 'rxjs/operators';
+import { of } from 'rxjs';
 
-export interface WorkLog {
-  id: number;
+export interface Log {
+  id?: number;
   title: string;
   content: string;
   category: string;
-  date: string;
+  hours: number;
+  date?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class LogService {
-  private logsSignal = signal<WorkLog[]>([
-    { id: 1, title: '完成登入與路由架構', content: '使用 Angular 獨立元件實作了登入頁與儀表板的切換。', category: '開發', date: '2026-06-07' },
-    { id: 2, title: '檢視團隊協作進度', content: '與團隊成員確認本週的 Sprint 目標與待辦清單。', category: '會議', date: '2026-06-07' },
-    { id: 3, title: '修復表單驗證問題', content: '調整了登入按鈕的事件綁定與表單送出邏輯。', category: '測試', date: '2026-06-08' }
-  ]);
+  private http = inject(HttpClient);
+  private apiUrl = 'http://localhost:8080/api/logs';
 
-  // 搜尋與篩選條件的訊號 (Signals)
-  searchQuery = signal<string>('');
-  selectedCategory = signal<string>('全部');
+  logs = signal<Log[]>([]);
 
-  logs = this.logsSignal.asReadonly();
-
-  // 計算屬性：根據搜尋關鍵字與分類自動過濾日誌
-  filteredLogs = computed(() => {
-    const query = this.searchQuery().toLowerCase().trim();
-    const category = this.selectedCategory();
-
-    return this.logsSignal().filter(log => {
-      const matchesCategory = category === '全部' || log.category === category;
-      const matchesQuery = log.title.toLowerCase().includes(query) || 
-                           log.content.toLowerCase().includes(query);
-      return matchesCategory && matchesQuery;
-    });
-  });
-
-  addLog(log: Omit<WorkLog, 'id'>) {
-    const newLog = { ...log, id: Date.now() };
-    this.logsSignal.update(currentLogs => [newLog, ...currentLogs]);
+  // 取得資料庫所有日誌
+  fetchLogs() {
+    this.http
+      .get<Log[]>(this.apiUrl)
+      .pipe(
+        tap((data) => this.logs.set(data)),
+        catchError((error) => {
+          console.error('無法連線至後端 API', error);
+          return of([]);
+        }),
+      )
+      .subscribe();
   }
+
+  // 新增日誌
+  addLog(newLog: Omit<Log, 'id'>) {
+    return this.http.post<Log>(this.apiUrl, newLog).pipe(
+      tap((savedLog) => {
+        this.logs.update((current) => [savedLog, ...current]);
+      }),
+    );
+  }
+  // 刪除日誌
+  deleteLog(id: number) {
+    return this.http.delete(`${this.apiUrl}/${id}`).pipe(
+      tap(() => {
+        this.logs.update((current) => current.filter((log) => log.id !== id));
+      }),
+    );
+  }
+  // 編輯日誌
+  updateLog(id: number, logData: Partial<Log>) {
+    // 發送 PUT 請求至後端 API 更新指定 ID 的日誌資料
+    return this.http.put<Log>(`${this.apiUrl}/${id}`, logData).pipe(
+      tap((updatedLog) => {
+        // 透過 map 走訪陣列，將對應 ID 的項目替換為後端回傳的更新後資料
+        this.logs.update((current) => current.map((log) => (log.id === id ? updatedLog : log)));
+      }),
+    );
+  }
+  
 }
