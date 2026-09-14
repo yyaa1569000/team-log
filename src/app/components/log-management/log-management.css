@@ -109,8 +109,8 @@
 
 .log-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 16px;
+  grid-template-columns: repeat(1, 1fr); /* 手機：1 欄 */
 }
 
 .log-card {
@@ -442,5 +442,18 @@
   .btn-cancel-edit {
     width: 100%;
     margin-top: 0.5rem;
+  }
+}
+/* 平板 / 中螢幕：2 欄 (7 排滿格) */
+@media (min-width: 640px) {
+  .log-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* 大螢幕 / 超寬螢幕：7 欄 (2 排滿格，剛好 14 筆) */
+@media (min-width: 1400px) {
+  .log-grid {
+    grid-template-columns: repeat(7, 1fr);
   }
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LogService } from '../../services/log';
@@ -45,6 +45,8 @@ export class LogManagement implements OnInit {
 
   // 編輯 ID 狀態
   editingLogId = signal<number | null>(null);
+
+  Math = Math;
 
   // 起始日期防呆
   onStartDateChange(event: any) {
@@ -98,39 +100,86 @@ export class LogManagement implements OnInit {
     const start = this.startDateFilter();
     const end = this.endDateFilter();
 
-    return this.logService
-      .logs()
-      .filter((log) => {
-        const logDateOnly = this.getLogDate(log);
+    return (
+      this.logService
+        .logs()
+        .filter((log) => {
+          const logDateOnly = this.getLogDate(log);
 
-        if (mode === 'today') {
-          if (logDateOnly !== this.todayDate) return false;
-        } else {
-          if (start && logDateOnly < start) return false;
-          if (end && logDateOnly > end) return false;
-        }
+          if (mode === 'today') {
+            if (logDateOnly !== this.todayDate) return false;
+          } else {
+            if (start && logDateOnly < start) return false;
+            if (end && logDateOnly > end) return false;
+          }
 
-        const matchesCategory = category === '全部' || log.category === category;
-        const matchesSearch =
-          !query ||
-          log.title.toLowerCase().includes(query) ||
-          log.content.toLowerCase().includes(query);
+          const matchesCategory = category === '全部' || log.category === category;
+          const matchesSearch =
+            !query ||
+            log.title.toLowerCase().includes(query) ||
+            log.content.toLowerCase().includes(query);
 
-        return matchesCategory && matchesSearch;
-      })
-      // 💡 最新日期排最前面（降冪排序）
-      .sort((a, b) => {
-        const dateA = new Date(this.getLogDate(a)).getTime();
-        const dateB = new Date(this.getLogDate(b)).getTime();
-        return dateA - dateB;
-      });
+          return matchesCategory && matchesSearch;
+        })
+        // 💡 最新日期排最前面（降冪排序）
+        .sort((a, b) => {
+          const dateA = new Date(this.getLogDate(a)).getTime();
+          const dateB = new Date(this.getLogDate(b)).getTime();
+          return dateA - dateB;
+        })
+    );
   });
+
+  // --- 分頁狀態與邏輯 ---
+  currentPage = signal<number>(1);
+  pageSize = signal<number>(14);
+
+  totalPages = computed(() => {
+    const total = Math.ceil(this.filteredLogs().length / this.pageSize());
+    return total > 0 ? total : 1;
+  });
+
+  paginatedLogs = computed(() => {
+    // 💡 防呆機制：若篩選後資料變少導致當前頁碼超出範圍，自動以最新總頁數計算
+    const validPage = Math.min(this.currentPage(), this.totalPages());
+    const startIndex = (validPage - 1) * this.pageSize();
+    return this.filteredLogs().slice(startIndex, startIndex + this.pageSize());
+  });
+
+  goToPage(page: number) {
+    if (page >= 1 && page <= this.totalPages()) {
+      this.currentPage.set(page);
+    }
+  }
+
+  private updatePageSize() {
+    const width = window.innerWidth;
+    let cols = 1;
+
+    if (width >= 1400)
+      cols = 7; // 大螢幕：7 欄 (2 排共 14 筆)
+    else if (width >= 1024)
+      cols = 2; // 中螢幕：2 欄 (7 排共 14 筆)
+    else if (width >= 640)
+      cols = 2; // 平板：2 欄
+    else cols = 1; // 手機：1 欄
+
+    // 計算 2 排數量，並將最大值鎖定在 14
+    const calculatedSize = cols * 2;
+    this.pageSize.set(Math.min(calculatedSize, 14));
+  }
 
   ngOnInit() {
     this.logService.fetchLogs();
+    this.updatePageSize();
   }
 
-submitLog() {
+  // 💡 監聽視窗大小改變，即時更新每頁筆數
+  @HostListener('window:resize')
+  onResize() {
+    this.updatePageSize();
+  }
+  submitLog() {
     // 欄位驗證
     if (!this.newTitle().trim() || !this.newContent().trim() || !this.newHours()) {
       this.showErrors.set(true);
@@ -240,7 +289,7 @@ submitLog() {
   }
 
   totalHours = computed(() =>
-    this.filteredLogs().reduce((sum, log) => sum + (Number(log.hours) || 0), 0)
+    this.filteredLogs().reduce((sum, log) => sum + (Number(log.hours) || 0), 0),
   );
 
   totalLogsCount = computed(() => this.filteredLogs().length);
@@ -248,7 +297,7 @@ submitLog() {
   devCategoryHours = computed(() =>
     this.filteredLogs()
       .filter((log) => log.category === '開發')
-      .reduce((sum, log) => sum + (Number(log.hours) || 0), 0)
+      .reduce((sum, log) => sum + (Number(log.hours) || 0), 0),
   );
 
   filterStatusText = computed(() => {
