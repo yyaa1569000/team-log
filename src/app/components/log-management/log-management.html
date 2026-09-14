@@ -15,26 +15,14 @@
     </button>
   </div>
 
-  <!-- 只有在「今日填寫」模式下，才顯示新增/編輯表單 -->
-  @if (viewMode() === 'today') {
-    <div class="log-form-card">
-      <h3>{{ editingLogId() ? '編輯今日工作日誌' : '新增今日工作日誌' }}</h3>
-      <!-- ... (表單原本的輸入框與按鈕保持不變) ... -->
-    </div>
-  }
-
-  <!-- 如果在「歷史紀錄」模式，可以多一個指定日期的篩選器 -->
+  <!-- 歷史日期篩選器 -->
   @if (viewMode() === 'history') {
     <div class="history-filter-card">
-      <label>指定日期查詢：</label>
-      <input
-        type="date"
-        [value]="historyDateFilter()"
-        (input)="historyDateFilter.set($any($event.target).value)"
-      />
-      @if (historyDateFilter()) {
-        <button class="btn-clear-date" (click)="historyDateFilter.set('')">清除日期</button>
-      }
+      <label>開始日期：</label>
+      <input type="date" [value]="startDateFilter()" (change)="onStartDateChange($event)" />
+      <label>結束日期：</label>
+      <input type="date" [value]="endDateFilter()" (change)="onEndDateChange($event)" />
+      <span class="filter-status-tag">{{ filterStatusText() }}</span>
     </div>
   }
 
@@ -44,7 +32,7 @@
       <div class="stat-icon">📊</div>
       <div class="stat-info">
         <span class="stat-label">總日誌筆數</span>
-        <span class="stat-value">{{ totalCount() }} 筆</span>
+        <span class="stat-value">{{ totalLogsCount() }} 筆</span>
       </div>
     </div>
 
@@ -60,7 +48,7 @@
       <div class="stat-icon">💻</div>
       <div class="stat-info">
         <span class="stat-label">開發類別工時</span>
-        <span class="stat-value">{{ devHours() }} 小時</span>
+        <span class="stat-value">{{ devCategoryHours() }} 小時</span>
       </div>
     </div>
   </div>
@@ -72,75 +60,78 @@
     </div>
   }
 
-  <!-- 新增日誌表單 -->
-  <div class="log-form-card">
-    <!-- 編輯日誌 -->
-    <h3>{{ editingLogId() ? '編輯工作日誌' : '新增工作日誌' }}</h3>
+  <!-- 只有在「今日填寫」模式下，才顯示新增/編輯表單 -->
+  @if (viewMode() === 'today') {
+    <div class="log-form-card">
+      <h3>{{ editingLogId() ? '編輯工作日誌' : '新增工作日誌' }}</h3>
 
-    <div class="form-group">
-      <label>標題 <span class="required">*</span></label>
-      <input
-        type="text"
-        [value]="newTitle()"
-        (input)="newTitle.set($any($event.target).value)"
-        placeholder="例如：修改登入表單"
-        [class.is-invalid]="showErrors() && !newTitle()"
-      />
-      @if (showErrors() && !newTitle()) {
-        <span class="error-text">請輸入日誌標題</span>
-      }
-    </div>
+      <div class="form-group">
+        <label>標題 <span class="required">*</span></label>
+        <input
+          type="text"
+          [value]="newTitle()"
+          (input)="newTitle.set($any($event.target).value)"
+          placeholder="例如：修改登入表單"
+          [class.is-invalid]="showErrors() && !newTitle()"
+        />
+        @if (showErrors() && !newTitle()) {
+          <span class="error-text">請輸入日誌標題</span>
+        }
+      </div>
 
-    <div class="form-group">
-      <label>分類</label>
-      <select [value]="newCategory()" (change)="newCategory.set($any($event.target).value)">
-        <option value="開發">💻 開發</option>
-        <option value="會議">🤝 會議</option>
-        <option value="企劃">📄 企劃</option>
-        <option value="除錯">🐛 除錯</option>
-      </select>
-    </div>
+      <div class="form-group">
+        <label>分類</label>
+        <select [value]="newCategory()" (change)="newCategory.set($any($event.target).value)">
+          <option value="開發">💻 開發</option>
+          <option value="會議">🤝 會議</option>
+          <option value="企劃">📄 企劃</option>
+          <option value="除錯">🐛 除錯</option>
+        </select>
+      </div>
 
-    <div class="form-group">
-      <label>工時 (小時) <span class="required">*</span></label>
-      <input
-        type="number"
-        step="0.5"
-        min="0"
-        [value]="newHours()"
-        (input)="newHours.set($any($event.target).value)"
-        placeholder="例如：2.5"
-        [class.is-invalid]="showErrors() && !newHours()"
-      />
-      @if (showErrors() && !newHours()) {
-        <span class="error-text">請輸入工時</span>
-      }
-    </div>
+      <div class="form-group">
+        <label>工時 (小時) <span class="required">*</span></label>
+        <input
+          type="number"
+          step="0.5"
+          min="0"
+          [value]="newHours()"
+          (input)="newHours.set($any($event.target).value)"
+          placeholder="例如：2.5"
+          [class.is-invalid]="showErrors() && !newHours()"
+        />
+        @if (showErrors() && !newHours()) {
+          <span class="error-text">請輸入工時</span>
+        }
+      </div>
 
-    <div class="form-group">
-      <label>詳細內容 <span class="required">*</span></label>
-      <textarea
-        rows="3"
-        [value]="newContent()"
-        (input)="newContent.set($any($event.target).value)"
-        placeholder="請說明今天完成的工作項目細節..."
-        [class.is-invalid]="showErrors() && !newContent()"
-      ></textarea>
-      @if (showErrors() && !newContent()) {
-        <span class="error-text">請輸入工作內容</span>
-      }
-    </div>
+      <div class="form-group">
+        <label>詳細內容 <span class="required">*</span></label>
+        <textarea
+          rows="3"
+          [value]="newContent()"
+          (input)="newContent.set($any($event.target).value)"
+          placeholder="請說明今天完成的工作項目細節..."
+          [class.is-invalid]="showErrors() && !newContent()"
+        ></textarea>
+        @if (showErrors() && !newContent()) {
+          <span class="error-text">請輸入工作內容</span>
+        }
+      </div>
 
-    <!-- 編輯日誌 -->
-    <div class="form-actions" style="display: flex; gap: 10px">
-      @if (editingLogId()) {
-        <button class="btn-cancel-edit" (click)="cancelEdit()">取消編輯</button>
-      }
-      <button class="btn-submit" (click)="submitLog()">
-        {{ editingLogId() ? '儲存變更' : '提交日誌' }}
-      </button>
+      <div class="form-actions" style="display: flex; gap: 10px">
+        <!-- 只有在編輯模式下，才會顯示「取消編輯」按鈕 -->
+        @if (editingLogId()) {
+          <button class="btn-cancel-edit" (click)="cancelEdit()">取消編輯</button>
+        }
+
+        <!-- 共用按鈕：編輯時顯示「儲存變更」，平時顯示「提交日誌」 -->
+        <button class="btn-submit" (click)="submitLog()">
+          {{ editingLogId() ? '儲存變更' : '提交日誌' }}
+        </button>
+      </div>
     </div>
-  </div>
+  }
 
   <!-- 日誌列表 -->
   <div class="log-list-section">
@@ -172,30 +163,18 @@
         @for (log of filteredLogs(); track log.id) {
           <div class="log-card">
             <div class="log-header">
-              <span class="category-badge">{{ log.category }}</span>
-              <span class="hours-badge">⏱️ {{ log.hours }} 小時</span>
-              <span class="log-date">{{ log.date }}</span>
-              <!-- 編輯按鈕 -->
-              <button class="btn-edit" (click)="startEdit(log)" title="編輯日誌">✏️</button>
-              <!-- 刪除按鈕 -->
-              <button class="btn-delete" (click)="openDeleteModal(log.id)" title="刪除日誌">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <polyline points="3 6 5 6 21 6"></polyline>
-                  <path
-                    d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
-                  ></path>
-                </svg>
-              </button>
+              <div class="log-meta">
+                <span class="category-badge">{{ log.category }}</span>
+                <span class="hours-badge">⏱️ {{ log.hours }} 小時</span>
+                <!-- 💡 顯示日期並帶上圖示 -->
+                <span class="log-date">📅 {{ getLogDate(log) }}</span>
+              </div>
+              <div class="log-actions">
+                <button class="btn-edit" (click)="startEdit(log)" title="編輯日誌">✏️</button>
+                <button class="btn-delete" (click)="openDeleteModal(log.id)" title="刪除日誌">
+                  🗑️
+                </button>
+              </div>
             </div>
             <h4>{{ log.title }}</h4>
             <p>{{ log.content }}</p>
@@ -209,16 +188,30 @@
     }
   </div>
 
-  <!-- 👈 2. 掛載通用 Modal 彈窗 -->
+  <!-- 刪除確認 Modal -->
   <app-confirm-modal
     [isOpen]="showDeleteModal()"
     title="確認刪除這筆日誌？"
     message="刪除後資料將無法復原，您確定要繼續嗎？"
-    icon="🗑️"
+    type="danger"
     confirmText="確認刪除"
-    confirmBtnClass="btn-danger"
     (confirmed)="handleConfirmDelete()"
     (cancelled)="showDeleteModal.set(false)"
   >
   </app-confirm-modal>
+
+  <!-- 警告 Modal -->
+  @if (showWarningModal()) {
+    <app-confirm-modal
+      [isOpen]="showWarningModal()"
+      title="提示"
+      [message]="warningMessage()"
+      confirmText="好"
+      type="success"
+      [showCancel]="false"
+      (confirmed)="closeWarningModal()"
+      (cancelled)="closeWarningModal()"
+    >
+    </app-confirm-modal>
+  }
 </div>

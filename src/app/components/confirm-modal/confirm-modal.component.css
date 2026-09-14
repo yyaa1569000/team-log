@@ -40,14 +40,58 @@
   transition: all 0.15s ease;
 }
 
-.btn-cancel { background-color: #f1f5f9; color: #475569; }
-.btn-cancel:hover { background-color: #e2e8f0; }
+/* 取消按鈕 */
+.btn-cancel {
+  background-color: #f1f5f9;
+  color: #475569;
+}
+.btn-cancel:hover {
+  background-color: #e2e8f0;
+}
 
-.btn-danger { background-color: #ef4444; color: white; }
-.btn-danger:hover { background-color: #dc2626; }
+/* 綠色 (提示 / 成功) */
+.btn-confirm.success,
+.btn-success {
+  background-color: #10b981 !important;
+  color: #ffffff !important;
+}
+.btn-confirm.success:hover,
+.btn-success:hover {
+  background-color: #059669 !important;
+}
 
-.btn-primary { background-color: #2563eb; color: white; }
-.btn-primary:hover { background-color: #1d4ed8; }
+/* 紅色 (危險 / 刪除) */
+.btn-confirm.danger,
+.btn-danger {
+  background-color: #ef4444 !important;
+  color: #ffffff !important;
+}
+.btn-confirm.danger:hover,
+.btn-danger:hover {
+  background-color: #dc2626 !important;
+}
+
+/* 黃色 (警告) */
+.btn-confirm.warning,
+.btn-warning {
+  background-color: #f59e0b !important;
+  color: #ffffff !important;
+}
+.btn-confirm.warning:hover,
+.btn-warning:hover {
+  background-color: #d97706 !important;
+}
+
+/* 藍色 (預設) */
+.btn-confirm.primary,
+.btn-primary {
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+}
+.btn-confirm.primary:hover,
+.btn-primary:hover {
+  background-color: #1d4ed8 !important;
+}
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes scaleUp { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }

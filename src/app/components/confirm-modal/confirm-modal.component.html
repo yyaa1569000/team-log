@@ -1,0 +1,21 @@
+@if (isOpen) {
+  <div class="modal-backdrop" (click)="onCancel()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-icon">⚠️</div>
+      <h3>{{ title }}</h3>
+      <p>{{ message }}</p>
+
+      <div class="modal-actions">
+        <!-- 當 showCancel 為 true 時才顯示取消按鈕 -->
+        @if (showCancel) {
+          <button class="btn-cancel" (click)="onCancel()">{{ cancelText }}</button>
+        }
+        
+        <!-- 動態產生 btn-confirm success / danger / warning -->
+        <button [class]="'btn-confirm ' + type" (click)="onConfirm()">
+          {{ confirmText }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

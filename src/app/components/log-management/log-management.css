@@ -19,9 +19,11 @@
 }
 
 .form-group label {
-  font-weight: 600;
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #475569;
   margin-bottom: 6px;
-  color: #2d3748;
 }
 
 .form-group input,
@@ -176,36 +178,18 @@
   color: #ef4444;
 }
 
-/* 表單卡片裡面的小標題 (新增工作日誌) */
+/* 表單卡片標題 */
 .log-form-card h3 {
   font-size: 1.15rem;
   font-weight: 600;
   color: #1e293b;
   margin-top: 0;
-  
-  /* 👈 1. 增加下邊距，把底下的欄位推開 */
-  margin-bottom: 20px; 
-  
-  /* 👈 2. 加入一條淡雅的底部分隔線與留白 (選配，視覺感大提升) */
+  margin-bottom: 20px;
   padding-bottom: 12px;
   border-bottom: 1px solid #f1f5f9;
 }
 
-/* 確保每一個表單區塊間距一致 */
-.form-group {
-  margin-bottom: 16px;
-}
-
-/* Label 與輸入框之間的留白 */
-.form-group label {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #475569;
-  margin-bottom: 6px; /* 標題跟輸入框之間的微小留白 */
-}
-
-/* 編輯日誌：按鈕基本樣式（與垃圾桶按鈕保持一致） */
+/* 編輯日誌按鈕 */
 .btn-edit {
   background: transparent;
   border: none;
@@ -219,13 +203,12 @@
   transition: all 0.2s ease;
 }
 
-/* 編輯日誌：滑鼠懸浮時的色彩（採用舒適的藍色系） */
 .btn-edit:hover {
-  background-color: #e0f2fe; /* 懸浮時淺藍底 */
-  color: #0284c7;            /* 懸浮時亮藍圖示 */
+  background-color: #e0f2fe;
+  color: #0284c7;
 }
 
-/* 現代化取消編輯按鈕 */
+/* 取消編輯按鈕 */
 .btn-cancel-edit {
   background-color: #f1f5f9;
   color: #475569;
@@ -293,6 +276,7 @@
   color: #0f172a;
   margin-top: 0.25rem;
 }
+
 /* 🗂️ 檢視模式切換頁籤 */
 .view-tabs {
   display: flex;
@@ -300,7 +284,6 @@
   margin-bottom: 1.5rem;
 }
 
-/* 頁籤按鈕 (修正原本陽春的樣式) */
 .tab-btn {
   background-color: #ffffff;
   border: 1px solid #cbd5e1;
@@ -320,7 +303,6 @@
   border-color: #94a3b8;
 }
 
-/* 作用中的頁籤高亮狀態 */
 .tab-btn.active {
   background-color: #1e293b;
   color: #ffffff;
@@ -347,7 +329,7 @@
   color: #475569;
 }
 
-.history-filter-card input[type="date"] {
+.history-filter-card input[type='date'] {
   padding: 0.5rem 0.75rem;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
@@ -356,10 +338,21 @@
   background-color: #f8fafc;
 }
 
-.history-filter-card input[type="date"]:focus {
+.history-filter-card input[type='date']:focus {
   border-color: #2563eb;
   background-color: #ffffff;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.filter-status-tag {
+  margin-left: auto;
+  font-size: 0.85rem;
+  color: #475569;
+  background-color: #f1f5f9;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 .btn-clear-date {
@@ -378,15 +371,58 @@
   background: #fecaca;
 }
 
-
 /* ==========================================
-   📱 響應式 RWD 補強（僅針對螢幕寬度 <= 640px）
+   📱 響應式 RWD 補強（針對手機與微型螢幕 <= 640px）
    ========================================== */
 @media (max-width: 640px) {
   .log-container {
     padding: 12px;
   }
 
+  /* 頁籤平分滿版 */
+  .view-tabs {
+    width: 100%;
+  }
+
+  .tab-btn {
+    flex: 1;
+    text-align: center;
+    padding: 0.6rem 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  /* 歷史日期篩選列轉為直向堆疊 */
+  .history-filter-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+
+  .history-filter-card input[type='date'] {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .filter-status-tag {
+    margin-left: 0;
+    width: 100%;
+    text-align: center;
+    box-sizing: border-box;
+  }
+
+  .btn-clear-date {
+    width: 100%;
+    text-align: center;
+  }
+
+  /* 關鍵數據統計卡片單欄排列 */
+  .dashboard-stats {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  /* 搜尋篩選列直向排列 */
   .filter-bar {
     flex-direction: column;
   }
@@ -396,11 +432,15 @@
     width: 100%;
   }
 
+  /* 日誌列表單欄展示 */
   .log-grid {
     grid-template-columns: 1fr;
   }
 
-  .btn-submit {
+  /* 表單按鈕滿版 */
+  .btn-submit,
+  .btn-cancel-edit {
     width: 100%;
+    margin-top: 0.5rem;
   }
 }
