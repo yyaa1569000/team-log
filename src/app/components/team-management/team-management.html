@@ -1,17 +1,43 @@
-<div class="team-manager">
-  <h2>👥 團隊成員列表</h2>
+<div class="team-container">
+  <div class="header">
+    <h3>團隊成員列表</h3>
+    <button class="btn-primary" (click)="openModal()">+ 新增成員</button>
+  </div>
+
+  <!-- 成員列表展示 -->
   <div class="member-grid">
     @for (member of teamService.members(); track member.id) {
       <div class="member-card">
-        <div class="member-avatar">{{ member.avatar }}</div>
-        <div class="member-info">
-          <h3>{{ member.name }}</h3>
-          <p class="role">{{ member.role }}</p>
-          <span class="status-badge" [class]="member.status">
-            {{ member.status === 'online' ? '線上' : member.status === 'busy' ? '忙碌中' : '離線' }}
-          </span>
+        <img [src]="member.avatar" alt="Avatar" class="avatar" />
+        <div class="info">
+          <h4>{{ member.name }}</h4>
+          <p>{{ member.role }}</p>
+          <span class="status-badge" [class]="member.status">{{ member.status }}</span>
         </div>
+        <button class="btn-delete" (click)="handleDeleteMember(member.id)">🗑️</button>
       </div>
     }
   </div>
+
+  <!-- 新增成員 Modal -->
+  @if (isModalOpen()) {
+    <div class="modal-backdrop" (click)="closeModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <h3>新增團隊成員</h3>
+        
+        <input type="text" [ngModel]="newName()" (ngModelChange)="newName.set($event)" placeholder="請輸入姓名" />
+        <select [ngModel]="newRole()" (ngModelChange)="newRole.set($event)">
+          <option value="前端工程師">前端工程師</option>
+          <option value="後端工程師">後端工程師</option>
+          <option value="UI/UX 設計師">UI/UX 設計師</option>
+          <option value="專案經理">專案經理</option>
+        </select>
+        
+        <div class="modal-actions">
+          <button (click)="closeModal()">取消</button>
+          <button class="btn-primary" (click)="handleAddMember()">確認新增</button>
+        </div>
+      </div>
+    </div>
+  }
 </div>

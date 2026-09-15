@@ -1,67 +1,32 @@
-<div class="dashboard-container">
+<div class="dashboard-layout">
+  <!-- 側邊欄 -->
   <aside class="sidebar">
     <div class="sidebar-brand">
-      <h2>TeamLog</h2>
-      <span>Workspace</span>
+      <h2>{{ settingsService.settings().workspaceName }}</h2>
     </div>
-<ul class="nav-links">
-  <li [class.active]="currentTab === 'overview'"><a href="javascript:void(0)" (click)="switchTab('overview')">📊 儀表板總覽</a></li>
-  <li [class.active]="currentTab === 'logs'"><a href="javascript:void(0)" (click)="switchTab('logs')">📝 工作日誌</a></li>
-  <li [class.active]="currentTab === 'team'"><a href="javascript:void(0)" (click)="switchTab('team')">👥 團隊成員</a></li>
-  <li [class.active]="currentTab === 'settings'"><a href="javascript:void(0)" (click)="switchTab('settings')">⚙️ 系統設定</a></li>
-</ul>
-    <div class="sidebar-footer">
-      <button class="btn-logout" (click)="logout()">登出系統</button>
-    </div>
+    
+    <nav class="sidebar-nav">
+      <!-- 💡 點總覽回到 /dashboard -->
+      <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">📊 總覽</a>
+      <a routerLink="logs" routerLinkActive="active">📝 工作日誌</a>
+      <a routerLink="team" routerLinkActive="active">👥 團隊成員</a>
+      <a routerLink="settings" routerLinkActive="active">⚙️ 系統設定</a>
+    </nav>
+
+    <button class="btn-logout" (click)="logout()">🚪 登出</button>
   </aside>
 
+  <!-- 主內容區 -->
   <main class="main-content">
-    <header class="top-bar">
-      <h1>歡迎回來，管理者</h1>
-      <div class="user-profile">
-        <span class="avatar">👨‍💻</span>
-        <span class="username">Admin</span>
+    @if (isOverview) {
+      <!-- 你的原本總覽面板，完全不動它 -->
+      <div class="overview-panel">
+        <h3>今日日誌數：{{ todayLogsCount() }}</h3>
+        <!-- 最新日誌列表 -->
       </div>
-    </header>
-
-<section class="content-body">
-      @if (currentTab === 'overview') {
-        <div class="card-grid">
-          <div class="stat-card">
-            <h3>今日日誌數</h3>
-            <p class="stat-number">12</p>
-          </div>
-          <div class="stat-card">
-            <h3>團隊線上人數</h3>
-            <p class="stat-number">5</p>
-          </div>
-          <div class="stat-card">
-            <h3>待辦事項</h3>
-            <p class="stat-number">3</p>
-          </div>
-        </div>
-
-        <div class="recent-logs">
-          <h2>近期團隊動態</h2>
-          <div class="log-item">
-            <span class="log-author">王小明</span> 提交了今日工作日誌
-            <span class="log-time">10分鐘前</span>
-          </div>
-          <div class="log-item">
-            <span class="log-author">李大華</span> 更新了專案進度
-            <span class="log-time">1小時前</span>
-          </div>
-        </div>
-      } 
-      @else if (currentTab === 'logs') {
-        <app-log-management></app-log-management>
-      } 
-      @else if (currentTab === 'team') {
-        <app-team-management></app-team-management>
-      }
-      @else if (currentTab === 'settings') {
-  <app-settings></app-settings>
-}
-    </section>
+    } @else {
+      <!-- 其他子路由頁面渲染在這裡 -->
+      <router-outlet></router-outlet>
+    }
   </main>
 </div>

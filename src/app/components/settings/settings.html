@@ -1,19 +1,53 @@
 <div class="settings-container">
-  <h2>⚙️ 系統設定</h2>
+  <div class="header">
+    <h3>⚙️ 系統設定</h3>
+  </div>
+
+  @if (toastMessage()) {
+    <div class="toast-success">
+      {{ toastMessage() }}
+    </div>
+  }
 
   <div class="settings-card">
-    <h3>工作區設定</h3>
-    <div class="setting-item">
-      <label>工作區名稱</label>
-      <input type="text" [(ngModel)]="workspaceName" placeholder="輸入工作區名稱">
-    </div>
-    <div class="setting-item">
-      <label>每日日誌提醒</label>
-      <input type="checkbox" [(ngModel)]="notificationsEnabled"> 啟用推播通知
-    </div>
-    <button class="btn-save" (click)="saveSettings()">儲存變更</button>
-    @if (savedMessage) {
-      <p class="success-msg">{{ savedMessage }}</p>
-    }
+    <h4 class="card-title">工作區與通知設定</h4>
+
+    <form (ngSubmit)="saveSettings()" class="settings-form">
+      <div class="form-group">
+        <label for="workspaceName">工作區名稱</label>
+        <input
+          id="workspaceName"
+          type="text"
+          [(ngModel)]="formData.workspaceName"
+          name="workspaceName"
+          placeholder="請輸入工作區名稱"
+        />
+      </div>
+
+      <div class="checkbox-group">
+        <label class="checkbox-item">
+          <input
+            type="checkbox"
+            [(ngModel)]="formData.dailyReminder"
+            name="dailyReminder"
+          />
+          <span class="checkbox-label">⏰ 每日填寫日誌提醒 (每日 17:00)</span>
+        </label>
+
+        <label class="checkbox-item">
+          <!-- 💡 ngModel 綁定同步修正為 pushNotification -->
+          <input
+            type="checkbox"
+            [(ngModel)]="formData.pushNotification"
+            name="pushNotification"
+          />
+          <span class="checkbox-label">🔔 啟用桌面推播通知</span>
+        </label>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-primary">儲存變更至資料庫</button>
+      </div>
+    </form>
   </div>
 </div>

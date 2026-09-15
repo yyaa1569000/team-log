@@ -1,6 +1,9 @@
 import { Routes } from '@angular/router';
 import { Login } from './components/login/login';
 import { Dashboard } from './components/dashboard/dashboard';
+import { TeamManagement } from './components/team-management/team-management';
+import { Settings } from './components/settings/settings';
+import { LogManagement } from './components/log-management/log-management'; 
 import { authGuard } from './guards/auth-guard';
 
 export const routes: Routes = [
@@ -9,8 +12,12 @@ export const routes: Routes = [
   { 
     path: 'dashboard', 
     component: Dashboard,
-    canActivate: [authGuard] 
+    canActivate: [authGuard],
+    children: [
+      { path: 'logs', component: LogManagement },
+      { path: 'team', component: TeamManagement },
+      { path: 'settings', component: Settings }
+    ]
   },
-  // { path: '**', redirectTo: 'login' }
-  { path: '**', redirectTo: 'login?error=404' }
+  { path: '**', redirectTo: 'login' }
 ];
