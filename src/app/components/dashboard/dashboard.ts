@@ -3,6 +3,8 @@ import { Router, RouterOutlet, RouterLink, RouterLinkActive, NavigationEnd } fro
 import { LogService } from '../../services/log';
 import { SettingsService } from '../../services/settings';
 import { filter } from 'rxjs';
+import { DashboardService } from '../../services/dashboard.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -15,15 +17,16 @@ export class Dashboard implements OnInit {
   private router = inject(Router);
   logService = inject(LogService);
   settingsService = inject(SettingsService);
-
+  dashboardService = inject(DashboardService);
   todayDate = new Date().toLocaleDateString('sv');
-  
+  authService = inject(AuthService);
+
   // 💡 用來判斷現在是不是在 /dashboard 總覽頁
   isOverview = false;
 
   constructor() {
     this.router.events
-      .pipe(filter(event => event instanceof NavigationEnd))
+      .pipe(filter((event) => event instanceof NavigationEnd))
       .forEach((event: any) => {
         // 如果網址剛好是 /dashboard 或 /dashboard/，就是總覽
         this.isOverview = event.url === '/dashboard' || event.url === '/dashboard/';
@@ -54,10 +57,10 @@ export class Dashboard implements OnInit {
     this.logService.fetchLogs();
     this.settingsService.fetchSettings();
     this.isOverview = this.router.url === '/dashboard' || this.router.url === '/dashboard/';
+    this.dashboardService.fetchStats();
   }
 
   logout() {
-    localStorage.removeItem('isLoggedIn');
-    this.router.navigate(['/login']);
+    this.authService.logout();
   }
 }

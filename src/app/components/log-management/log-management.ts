@@ -30,8 +30,14 @@ export class LogManagement implements OnInit {
   showDeleteModal = signal(false);
   deletingLogId = signal<number | null>(null);
 
-  // 取得今天的日期字串 (YYYY-MM-DD)
-  todayDate = new Date().toISOString().split('T')[0];
+  // 💡 修正 1：改為 getter 動態取得當前「本地時間」的 YYYY-MM-DD（解決 UTC 跨夜扣一天問題）
+  get todayDate(): string {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
 
   // 檢視模式
   viewMode = signal<'today' | 'history'>('today');
@@ -99,6 +105,7 @@ export class LogManagement implements OnInit {
     const category = this.selectedCategory();
     const start = this.startDateFilter();
     const end = this.endDateFilter();
+    const today = this.todayDate; // 取得當前正確日期
 
     return (
       this.logService
@@ -107,7 +114,7 @@ export class LogManagement implements OnInit {
           const logDateOnly = this.getLogDate(log);
 
           if (mode === 'today') {
-            if (logDateOnly !== this.todayDate) return false;
+            if (logDateOnly !== today) return false;
           } else {
             if (start && logDateOnly < start) return false;
             if (end && logDateOnly > end) return false;
@@ -121,11 +128,11 @@ export class LogManagement implements OnInit {
 
           return matchesCategory && matchesSearch;
         })
-        // 💡 最新日期排最前面（降冪排序）
+        // 💡 修正 2：改為 `dateB - dateA` 才是真正的最新日期降冪排序
         .sort((a, b) => {
           const dateA = new Date(this.getLogDate(a)).getTime();
           const dateB = new Date(this.getLogDate(b)).getTime();
-          return dateA - dateB;
+          return dateB - dateA;
         })
     );
   });
@@ -140,7 +147,6 @@ export class LogManagement implements OnInit {
   });
 
   paginatedLogs = computed(() => {
-    // 💡 防呆機制：若篩選後資料變少導致當前頁碼超出範圍，自動以最新總頁數計算
     const validPage = Math.min(this.currentPage(), this.totalPages());
     const startIndex = (validPage - 1) * this.pageSize();
     return this.filteredLogs().slice(startIndex, startIndex + this.pageSize());
@@ -156,15 +162,11 @@ export class LogManagement implements OnInit {
     const width = window.innerWidth;
     let cols = 1;
 
-    if (width >= 1400)
-      cols = 7; // 大螢幕：7 欄 (2 排共 14 筆)
-    else if (width >= 1024)
-      cols = 2; // 中螢幕：2 欄 (7 排共 14 筆)
-    else if (width >= 640)
-      cols = 2; // 平板：2 欄
-    else cols = 1; // 手機：1 欄
+    if (width >= 1400) cols = 7;
+    else if (width >= 1024) cols = 2;
+    else if (width >= 640) cols = 2;
+    else cols = 1;
 
-    // 計算 2 排數量，並將最大值鎖定在 14
     const calculatedSize = cols * 2;
     this.pageSize.set(Math.min(calculatedSize, 14));
   }
@@ -174,13 +176,12 @@ export class LogManagement implements OnInit {
     this.updatePageSize();
   }
 
-  // 💡 監聽視窗大小改變，即時更新每頁筆數
   @HostListener('window:resize')
   onResize() {
     this.updatePageSize();
   }
+
   submitLog() {
-    // 欄位驗證
     if (!this.newTitle().trim() || !this.newContent().trim() || !this.newHours()) {
       this.showErrors.set(true);
       return;
@@ -189,8 +190,6 @@ export class LogManagement implements OnInit {
     const editId = this.editingLogId();
 
     if (editId) {
-      // 💡【儲存變更】邏輯
-      // 先找出原本的日誌資料，保留原本的日期或其它屬性
       const originalLog = this.logService.logs().find((l) => l.id === editId);
 
       const updatedLogData = {
@@ -199,19 +198,18 @@ export class LogManagement implements OnInit {
         category: this.newCategory(),
         hours: Number(this.newHours()) || 0,
         content: this.newContent().trim(),
-        date: originalLog?.date || this.todayDate, // 保留原本日期
+        date: originalLog?.date || this.todayDate,
       };
 
       this.logService.updateLog(editId, updatedLogData).subscribe({
         next: () => {
           this.toastMessage.set('✏️ 成功更新工作日誌！');
-          this.cancelEdit(); // 儲存成功後清空表單，恢復成新增狀態
+          this.cancelEdit();
           setTimeout(() => this.toastMessage.set(''), 3000);
         },
         error: (err) => console.error('更新失敗：', err),
       });
     } else {
-      // 💡【新增日誌】邏輯
       const newLogData = {
         title: this.newTitle().trim(),
         category: this.newCategory(),
@@ -255,18 +253,15 @@ export class LogManagement implements OnInit {
     });
   }
 
-  // 點擊編輯按鈕
   startEdit(log: any) {
     const logDate = this.getLogDate(log);
 
-    // 💡 1. 防呆檢查：若不是當日日誌，禁止編輯並跳出警告訊息
     if (logDate !== this.todayDate) {
       this.warningMessage.set('⚠️ 僅能編輯當日的工作日誌，歷史紀錄無法修改！');
       this.showWarningModal.set(true);
       return;
     }
 
-    // 💡 2. 若為當日日誌：自動切換至「今日工作填寫」頁籤並載入資料
     this.viewMode.set('today');
     this.editingLogId.set(log.id);
     this.newTitle.set(log.title);
@@ -275,7 +270,6 @@ export class LogManagement implements OnInit {
     this.newContent.set(log.content);
     this.showErrors.set(false);
 
-    // 💡 3. 平滑捲動至頂部表單
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 

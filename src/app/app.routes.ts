@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { Login } from './components/login/login';
 import { Dashboard } from './components/dashboard/dashboard';
-import { TeamManagement } from './components/team-management/team-management';
+import { TeamManagementComponent } from './components/team-management/team-management';
 import { Settings } from './components/settings/settings';
 import { LogManagement } from './components/log-management/log-management'; 
 import { authGuard } from './guards/auth-guard';
@@ -14,8 +14,9 @@ export const routes: Routes = [
     component: Dashboard,
     canActivate: [authGuard],
     children: [
+      // 移除原本的 redirectTo: 'team'
       { path: 'logs', component: LogManagement },
-      { path: 'team', component: TeamManagement },
+      { path: 'team', component: TeamManagementComponent },
       { path: 'settings', component: Settings }
     ]
   },

@@ -1,16 +1,17 @@
 import { inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Router, CanActivateFn } from '@angular/router';
+import { AuthService } from '../services/auth.service'; 
 
 export const authGuard: CanActivateFn = (route, state) => {
   const router = inject(Router);
   const platformId = inject(PLATFORM_ID);
+  const authService = inject(AuthService); 
 
-  // 1. 判斷目前是否在瀏覽器環境
+  // 判斷目前是否在瀏覽器環境 (保留你的 SSR 處理)
   if (isPlatformBrowser(platformId)) {
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-
-    if (isLoggedIn) {
+    // 改用 AuthService 判斷是否有 currentUser
+    if (authService.isLoggedIn()) {
       return true;
     } else {
       router.navigate(['/login']);
@@ -18,6 +19,6 @@ export const authGuard: CanActivateFn = (route, state) => {
     }
   }
 
-  // 2. 如果在伺服器端 (SSR)，預設先擋下或不處理，等待客戶端接管
+  // 伺服器端 (SSR) 預設先擋下
   return false;
 };

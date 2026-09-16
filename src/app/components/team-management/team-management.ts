@@ -1,65 +1,72 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed} from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TeamService, TeamMember } from '../../services/team';
+import { TeamService, User } from '../../services/team';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-team-management',
   standalone: true,
-  imports: [FormsModule], // 💡 引入 FormsModule 處理雙向綁定 [(ngModel)]
+  imports: [CommonModule, FormsModule],
   templateUrl: './team-management.html',
-  styleUrl: './team-management.css',
+  styleUrls: ['./team-management.css']
 })
-export class TeamManagement implements OnInit {
+export class TeamManagementComponent implements OnInit {
   teamService = inject(TeamService);
-
-  // 控制新增成員 Modal 彈窗開關
   isModalOpen = signal(false);
+  newMemberName = signal('');
+  newMemberUsername = signal('');
+  authService = inject(AuthService);
 
-  // 新增成員的表單暫存狀態
-  newName = signal('');
-  newRole = signal('前端工程師');
-  newStatus = signal('線上');
+  isDeleteModalOpen = signal(false);
+  userToDelete = signal<User | null>(null);
+
+  // 判斷目前登入使用者是否具有 ADMIN 權限
+  isAdmin = computed(() => this.authService.currentUser()?.role === 'ADMIN');
+
 
   ngOnInit() {
-    this.teamService.fetchMembers(); // 頁面載入時向後端請求資料
+    this.teamService.fetchUsers();
   }
 
-  // 開關 Modal
   openModal() {
+    this.newMemberName.set('');
+    this.newMemberUsername.set('');
     this.isModalOpen.set(true);
+    this.teamService.fetchUsers();
+    if (!this.isAdmin()) return; // 雙重防護
   }
 
   closeModal() {
     this.isModalOpen.set(false);
-    this.resetForm();
   }
 
-  resetForm() {
-    this.newName.set('');
-    this.newRole.set('前端工程師');
-    this.newStatus.set('線上');
+  submitAddMember() {
+    const name = this.newMemberName().trim();
+    const username = this.newMemberUsername().trim();
+
+    if (name) {
+      this.teamService.addUser({ name, username: username || undefined });
+      this.closeModal();
+    }
   }
 
-  // 觸發新增動作
-  handleAddMember() {
-    if (!this.newName().trim()) return;
-
-    const newMember: TeamMember = {
-      name: this.newName().trim(),
-      role: this.newRole(),
-      status: this.newStatus(),
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(this.newName())}`,
-    };
-
-    this.teamService.addMember(newMember);
-    this.closeModal();
+  openDeleteModal(user: User) {
+    this.userToDelete.set(user);
+    this.isDeleteModalOpen.set(true);
   }
 
-  // 觸發刪除動作
-  handleDeleteMember(id?: number) {
-    if (!id) return;
-    if (confirm('確定要刪除該團隊成員嗎？')) {
-      this.teamService.deleteMember(id);
+  closeDeleteModal() {
+    this.isDeleteModalOpen.set(false);
+    this.userToDelete.set(null);
+  }
+
+  confirmDeleteMember() {
+    const user = this.userToDelete();
+    if (user && user.id) {
+      this.teamService.deleteUser(user.id, () => {
+        this.closeDeleteModal();
+      });
     }
   }
 }

@@ -1,49 +1,49 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { DashboardService } from './dashboard.service';
 
-export interface TeamMember {
+export interface User {
   id?: number;
   name: string;
-  role: string;
-  status: string;
-  avatar?: string;
+  username?: string;
+  password?: string;
+  role?: string; // "ADMIN" | "USER"
 }
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class TeamService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8080/api/team';
+  private dashboardService = inject(DashboardService);
 
-  // 全局成員 Signal 狀態
-  members = signal<TeamMember[]>([]);
+  users = signal<User[]>([]);
 
-  // 1. 取得最新成員列表
-  fetchMembers() {
-    this.http.get<TeamMember[]>(this.apiUrl).subscribe({
-      next: (data) => this.members.set(data),
-      error: (err) => console.error('取得成員列表失敗：', err),
+  fetchUsers() {
+    this.http.get<User[]>('/api/users').subscribe({
+      next: (data) => this.users.set(data),
+      error: (err) => console.error('取得成員失敗:', err)
     });
   }
 
-  // 2. 新增成員
-  addMember(member: TeamMember) {
-    this.http.post<TeamMember>(this.apiUrl, member).subscribe({
-      next: (newMember) => {
-        this.members.update((list) => [...list, newMember]);
+  addUser(userPayload: { name: string; username?: string }) {
+    this.http.post<User>('/api/users', userPayload).subscribe({
+      next: (newUser) => {
+        this.users.update(list => [...list, newUser]);
+        this.dashboardService.fetchStats();
       },
-      error: (err) => console.error('新增成員失敗：', err),
+      error: (err) => console.error('新增成員失敗:', err)
     });
   }
 
-  // 3. 刪除成員
-  deleteMember(id: number) {
-    this.http.delete(`${this.apiUrl}/${id}`).subscribe({
+  deleteUser(id: number, callback?: () => void) {
+    this.http.delete(`/api/users/${id}`).subscribe({
       next: () => {
-        this.members.update((list) => list.filter((m) => m.id !== id));
+        this.users.update(list => list.filter(user => user.id !== id));
+        this.dashboardService.fetchStats();
+        if (callback) callback();
       },
-      error: (err) => console.error('刪除成員失敗：', err),
+      error: (err) => console.error('刪除成員失敗:', err)
     });
   }
 }

@@ -1,43 +1,105 @@
 <div class="team-container">
-  <div class="header">
-    <h3>團隊成員列表</h3>
-    <button class="btn-primary" (click)="openModal()">+ 新增成員</button>
-  </div>
-
-  <!-- 成員列表展示 -->
-  <div class="member-grid">
-    @for (member of teamService.members(); track member.id) {
-      <div class="member-card">
-        <img [src]="member.avatar" alt="Avatar" class="avatar" />
-        <div class="info">
-          <h4>{{ member.name }}</h4>
-          <p>{{ member.role }}</p>
-          <span class="status-badge" [class]="member.status">{{ member.status }}</span>
-        </div>
-        <button class="btn-delete" (click)="handleDeleteMember(member.id)">🗑️</button>
-      </div>
+  <div class="header-section">
+    <h2>團隊成員列表</h2>
+    <!-- 僅 ADMIN 可見新增按鈕 -->
+    @if (isAdmin()) {
+      <button class="btn-primary" (click)="openModal()">+ 新增成員</button>
     }
   </div>
 
-  <!-- 新增成員 Modal -->
-  @if (isModalOpen()) {
-    <div class="modal-backdrop" (click)="closeModal()">
-      <div class="modal-content" (click)="$event.stopPropagation()">
-        <h3>新增團隊成員</h3>
-        
-        <input type="text" [ngModel]="newName()" (ngModelChange)="newName.set($event)" placeholder="請輸入姓名" />
-        <select [ngModel]="newRole()" (ngModelChange)="newRole.set($event)">
-          <option value="前端工程師">前端工程師</option>
-          <option value="後端工程師">後端工程師</option>
-          <option value="UI/UX 設計師">UI/UX 設計師</option>
-          <option value="專案經理">專案經理</option>
-        </select>
-        
-        <div class="modal-actions">
-          <button (click)="closeModal()">取消</button>
-          <button class="btn-primary" (click)="handleAddMember()">確認新增</button>
+  @if (teamService.users().length > 0) {
+    <div class="member-grid">
+      @for (user of teamService.users(); track user.id) {
+        <div class="member-card">
+          <div class="avatar">👤</div>
+          <div class="member-info">
+            <div class="name-row">
+              <span class="member-name">{{ user.name }}</span>
+              <span class="role-badge" [class.admin]="user.role === 'ADMIN'">
+                {{ user.role === 'ADMIN' ? '管理者' : '一般成員' }}
+              </span>
+            </div>
+            <span class="member-account">帳號：{{ user.username || '無' }}</span>
+          </div>
+          <!-- 僅 ADMIN 可以刪除其他一般成員 -->
+          @if (isAdmin() && user.role !== 'ADMIN') {
+            <button class="btn-delete" (click)="openDeleteModal(user)" title="刪除成員">🗑️</button>
+          }
         </div>
-      </div>
+      }
+    </div>
+  } @else {
+    <div class="empty-state">
+      <div class="empty-icon">👥</div>
+      <p>目前尚無團隊成員，點擊右上角新增一個吧！</p>
     </div>
   }
 </div>
+
+<!-- 新增成員 Modal -->
+@if (isModalOpen()) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>新增團隊成員</h3>
+        <button class="btn-close" (click)="closeModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <label for="memberName">成員姓名 <span class="required">*</span></label>
+        <input
+          id="memberName"
+          type="text"
+          [ngModel]="newMemberName()"
+          (ngModelChange)="newMemberName.set($event)"
+          placeholder="例如：張小明"
+          autofocus
+        />
+
+        <label for="username">登入帳號</label>
+        <input
+          id="username"
+          type="text"
+          [ngModel]="newMemberUsername()"
+          (ngModelChange)="newMemberUsername.set($event)"
+          placeholder="未填寫將自動產生"
+        />
+
+        <div class="default-info-box">
+          <p>🔑 <strong>預設密碼：</strong> <code>123456</code></p>
+          <p>🛡️ <strong>權限類別：</strong> 一般成員（僅可操作工作日誌）</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeModal()">取消</button>
+        <button
+          class="btn-primary"
+          (click)="submitAddMember()"
+          [disabled]="!newMemberName().trim()"
+        >
+          確認新增
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- 刪除確認 Modal -->
+@if (isDeleteModalOpen()) {
+  <div class="modal-overlay" (click)="closeDeleteModal()">
+    <div class="modal-card modal-delete" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>確認刪除</h3>
+        <button class="btn-close" (click)="closeDeleteModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="delete-warning-text">
+          您確定要刪除成員 <strong>「{{ userToDelete()?.name }}」</strong> 嗎？此動作無法復原。
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeDeleteModal()">取消</button>
+        <button class="btn-danger" (click)="confirmDeleteMember()">確認刪除</button>
+      </div>
+    </div>
+  </div>
+}

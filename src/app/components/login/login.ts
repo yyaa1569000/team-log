@@ -1,6 +1,7 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, signal, inject, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -9,23 +10,41 @@ import { FormsModule } from '@angular/forms';
   templateUrl: './login.html',
   styleUrl: './login.css'
 })
-export class Login {
+export class Login implements OnInit {
   private router = inject(Router);
+  private authService = inject(AuthService);
 
-  email = signal('');
+  username = signal('');
   password = signal('');
   errorMessage = signal('');
 
+  ngOnInit() {
+    // 已登入者若進入 /login，自動跳轉至儀表板團隊頁
+    if (this.authService.isLoggedIn()) {
+      this.router.navigate(['/dashboard/team']);
+    }
+  }
+
   onLogin() {
-    // 檢查欄位是否填寫
-    if (!this.email().trim() || !this.password().trim()) {
-      this.errorMessage.set('請輸入電子郵件與密碼！');
+    if (!this.username().trim() || !this.password().trim()) {
+      this.errorMessage.set('請輸入帳號與密碼！');
       return;
     }
 
-    // 寫入登入狀態並跳轉
-    localStorage.setItem('isLoggedIn', 'true');
     this.errorMessage.set('');
-    this.router.navigate(['/dashboard']);
+
+    this.authService.login({
+      username: this.username().trim(),
+      password: this.password().trim()
+    }).subscribe({
+      next: () => {
+        // 👈 正確導向子路由 /dashboard/team
+        this.router.navigate(['/dashboard/team']);
+      },
+      error: (err) => {
+        const msg = typeof err.error === 'string' ? err.error : '帳號或密碼錯誤！';
+        this.errorMessage.set(msg);
+      }
+    });
   }
 }

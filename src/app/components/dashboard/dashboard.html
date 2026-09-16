@@ -1,12 +1,11 @@
 <div class="dashboard-layout">
-  <!-- 側邊欄 -->
+  <!-- 1. 左側邊欄（絕對不能少！） -->
   <aside class="sidebar">
     <div class="sidebar-brand">
       <h2>{{ settingsService.settings().workspaceName }}</h2>
     </div>
     
     <nav class="sidebar-nav">
-      <!-- 💡 點總覽回到 /dashboard -->
       <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">📊 總覽</a>
       <a routerLink="logs" routerLinkActive="active">📝 工作日誌</a>
       <a routerLink="team" routerLinkActive="active">👥 團隊成員</a>
@@ -16,16 +15,44 @@
     <button class="btn-logout" (click)="logout()">🚪 登出</button>
   </aside>
 
-  <!-- 主內容區 -->
+  <!-- 2. 右側主內容區 -->
   <main class="main-content">
     @if (isOverview) {
-      <!-- 你的原本總覽面板，完全不動它 -->
+      <!-- 總覽面板與統計卡片 -->
       <div class="overview-panel">
-        <h3>今日日誌數：{{ todayLogsCount() }}</h3>
-        <!-- 最新日誌列表 -->
+        <div class="overview-header">
+          <h3>📊 系統總覽儀表板</h3>
+          <p class="subtitle">歡迎回來！以下是今日的系統即時數據統計。</p>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon bg-blue">📝</div>
+            <div class="stat-info">
+              <span class="stat-title">今日日誌數</span>
+              <span class="stat-value">{{ todayLogsCount() }} 篇</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon bg-green">👥</div>
+            <div class="stat-info">
+              <span class="stat-title">團隊總人數</span>
+              <span class="stat-value">{{ dashboardService.stats().teamMemberCount }} 人</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon bg-purple">🟢</div>
+            <div class="stat-info">
+              <span class="stat-title">系統運行狀態</span>
+              <span class="stat-value">{{ dashboardService.stats().systemStatus }}</span>
+            </div>
+          </div>
+        </div>
       </div>
     } @else {
-      <!-- 其他子路由頁面渲染在這裡 -->
+      <!-- 子路由頁面 -->
       <router-outlet></router-outlet>
     }
   </main>
