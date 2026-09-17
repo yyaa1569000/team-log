@@ -14,7 +14,9 @@ export const routes: Routes = [
     component: Dashboard,
     canActivate: [authGuard],
     children: [
-      // 移除原本的 redirectTo: 'team'
+      // 💡 保持空白或 redirect 即可，不要把 Dashboard 元件再塞進來
+      { path: '', redirectTo: 'overview', pathMatch: 'full' },
+      { path: 'overview', redirectTo: '', pathMatch: 'full' }, // 導回父層顯示總覽
       { path: 'logs', component: LogManagement },
       { path: 'team', component: TeamManagementComponent },
       { path: 'settings', component: Settings }

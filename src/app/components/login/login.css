@@ -125,3 +125,30 @@
     padding: 24px 20px; /* 手機上內距稍微收緊 */
   }
 }
+
+/* 💡 面試測試帳密提示樣式 */
+.demo-credentials-hint {
+  margin-top: 20px;
+  padding: 12px 14px;
+  background-color: #f7fafc;
+  border: 1px dashed #cbd5e0;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.hint-content {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  font-size: 13px;
+  color: #2d3748;
+}
+
+.hint-content code {
+  background: #edf2f7;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #3182ce;
+  font-weight: 600;
+  font-family: monospace;
+}

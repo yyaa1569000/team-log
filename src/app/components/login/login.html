@@ -4,9 +4,19 @@
       <h2>TeamLog</h2>
       <p class="subtitle">團隊協作與日誌管理系統</p>
     </div>
-    
+
     @if (errorMessage()) {
-      <div style="color: #e53e3e; background: #fff5f5; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 14px; text-align: center;">
+      <div
+        style="
+          color: #e53e3e;
+          background: #fff5f5;
+          padding: 10px;
+          border-radius: 6px;
+          margin-bottom: 15px;
+          font-size: 14px;
+          text-align: center;
+        "
+      >
         {{ errorMessage() }}
       </div>
     }
@@ -14,34 +24,38 @@
     <form (ngSubmit)="onLogin()">
       <div class="form-group">
         <label for="username">帳號</label>
-        <input 
-          type="text" 
-          id="username" 
-          placeholder="請輸入帳號" 
-          [value]="username()" 
+        <input
+          type="text"
+          id="username"
+          placeholder="請輸入帳號"
+          [value]="username()"
           (input)="username.set($any($event.target).value)"
-        >
+        />
       </div>
 
       <div class="form-group">
         <label for="password">密碼</label>
-        <input 
-          type="password" 
-          id="password" 
-          placeholder="請輸入密碼" 
-          [value]="password()" 
+        <input
+          type="password"
+          id="password"
+          placeholder="請輸入密碼"
+          [value]="password()"
           (input)="password.set($any($event.target).value)"
-        >
+        />
       </div>
 
       <div class="form-actions">
-        <label class="remember-me">
-          <input type="checkbox"> 記住我
-        </label>
+        <label class="remember-me"> <input type="checkbox" /> 記住我 </label>
         <a href="#" class="forgot-password">忘記密碼？</a>
       </div>
 
       <button type="submit" class="btn-submit">登入</button>
     </form>
+    <div class="demo-credentials-hint">
+      <div class="hint-content">
+        <span>管理員帳號：<code>dragon</code></span><br>
+        <span>密碼：<code>dragon7788</code></span>
+      </div>
+    </div>
   </div>
 </div>

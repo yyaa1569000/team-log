@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, computed } from '@angular/core';
+import { CommonModule } from '@angular/common'; // 💡 確保有匯入 CommonModule 以支援 @if 等指令
 import { Router, RouterOutlet, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
 import { LogService } from '../../services/log';
 import { SettingsService } from '../../services/settings';
@@ -9,7 +10,7 @@ import { AuthService } from '../../services/auth.service';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive], // 💡 這裡不需要再匯入其他子元件了
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive], // 💡 補上 CommonModule
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
@@ -18,17 +19,18 @@ export class Dashboard implements OnInit {
   logService = inject(LogService);
   settingsService = inject(SettingsService);
   dashboardService = inject(DashboardService);
-  todayDate = new Date().toLocaleDateString('sv');
   authService = inject(AuthService);
 
-  // 💡 用來判斷現在是不是在 /dashboard 總覽頁
+  todayDate = new Date().toLocaleDateString('sv');
+
+  // 用來判斷現在是不是在 /dashboard 總覽頁
   isOverview = false;
 
   constructor() {
     this.router.events
-      .pipe(filter((event) => event instanceof NavigationEnd))
-      .forEach((event: any) => {
-        // 如果網址剛好是 /dashboard 或 /dashboard/，就是總覽
+      .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
+      .subscribe((event: NavigationEnd) => {
+        // 💡 擴充判斷，涵蓋 /dashboard 及其可能的結尾
         this.isOverview = event.url === '/dashboard' || event.url === '/dashboard/';
       });
   }
@@ -56,8 +58,11 @@ export class Dashboard implements OnInit {
   ngOnInit() {
     this.logService.fetchLogs();
     this.settingsService.fetchSettings();
-    this.isOverview = this.router.url === '/dashboard' || this.router.url === '/dashboard/';
     this.dashboardService.fetchStats();
+    
+    // 初始化先判斷一次當前網址
+    const currentUrl = this.router.url;
+    this.isOverview = currentUrl === '/dashboard' || currentUrl === '/dashboard/';
   }
 
   logout() {

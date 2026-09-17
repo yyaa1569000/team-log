@@ -170,3 +170,61 @@
   font-weight: 600;
   color: #2d3748;
 }
+
+/* 側邊欄底部區域 */
+.sidebar-footer {
+  padding: 16px;
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* 使用者資訊精緻卡片 */
+.user-profile-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+}
+
+.user-avatar {
+  font-size: 18px;
+  background: rgba(255, 255, 255, 0.1);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.user-name {
+  color: #edf2f7;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-role-badge {
+  font-size: 11px;
+  color: #a0aec0;
+  margin-top: 2px;
+}
+
+.user-role-badge.admin {
+  color: #63b3ed;
+  font-weight: 500;
+}

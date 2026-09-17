@@ -21,7 +21,7 @@ export class Login implements OnInit {
   ngOnInit() {
     // 已登入者若進入 /login，自動跳轉至儀表板團隊頁
     if (this.authService.isLoggedIn()) {
-      this.router.navigate(['/dashboard/team']);
+      this.router.navigate(['/dashboard']);
     }
   }
 
@@ -39,7 +39,7 @@ export class Login implements OnInit {
     }).subscribe({
       next: () => {
         // 👈 正確導向子路由 /dashboard/team
-        this.router.navigate(['/dashboard/team']);
+        this.router.navigate(['/dashboard']);
       },
       error: (err) => {
         const msg = typeof err.error === 'string' ? err.error : '帳號或密碼錯誤！';

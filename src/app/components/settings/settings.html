@@ -1,8 +1,9 @@
 <div class="settings-container">
   <div class="header">
-    <h3>⚙️ 系統設定</h3>
+    <h3>⚙️ 系統與個人設定</h3>
   </div>
 
+  <!-- 1. 系統設定區塊 -->
   @if (toastMessage()) {
     <div class="toast-success">
       {{ toastMessage() }}
@@ -26,27 +27,73 @@
 
       <div class="checkbox-group">
         <label class="checkbox-item">
-          <input
-            type="checkbox"
-            [(ngModel)]="formData.dailyReminder"
-            name="dailyReminder"
-          />
+          <input type="checkbox" [(ngModel)]="formData.dailyReminder" name="dailyReminder" />
           <span class="checkbox-label">⏰ 每日填寫日誌提醒 (每日 17:00)</span>
         </label>
 
         <label class="checkbox-item">
-          <!-- 💡 ngModel 綁定同步修正為 pushNotification -->
-          <input
-            type="checkbox"
-            [(ngModel)]="formData.pushNotification"
-            name="pushNotification"
-          />
+          <input type="checkbox" [(ngModel)]="formData.pushNotification" name="pushNotification" />
           <span class="checkbox-label">🔔 啟用桌面推播通知</span>
         </label>
       </div>
 
       <div class="form-actions">
-        <button type="submit" class="btn-primary">儲存變更至資料庫</button>
+        <button type="submit" class="btn-primary">儲存系統設定</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- 2. 個人帳號與密碼設定區塊 -->
+  @if (accountToastMessage()) {
+    <div class="toast-success">
+      {{ accountToastMessage() }}
+    </div>
+  }
+
+  <div class="settings-card" style="margin-top: 24px">
+    <h4 class="card-title">👤 個人登入與密碼修改</h4>
+
+    <form (ngSubmit)="saveAccountSettings()" class="settings-form">
+      <div class="form-group">
+        <label for="userName">成員姓名</label>
+        <input
+          id="userName"
+          type="text"
+          [(ngModel)]="userFormData.name"
+          name="userName"
+          placeholder="請輸入姓名"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="userAccount">登入帳號</label>
+        <input
+          id="userAccount"
+          type="text"
+          [(ngModel)]="userFormData.username"
+          name="userAccount"
+          placeholder="請輸入登入帳號"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="userPassword"
+          >新密碼
+          <span style="font-weight: normal; color: #a0aec0; font-size: 12px"
+            >(若不修改請保持空白)</span
+          ></label
+        >
+        <input
+          id="userPassword"
+          type="text"
+          [(ngModel)]="userFormData.password"
+          name="userPassword"
+          [placeholder]="'請輸入新密碼' + '(當前密碼為：' + userFormData.currentPassword + ')'"
+        />
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-primary">更新個人帳號密碼</button>
       </div>
     </form>
   </div>
