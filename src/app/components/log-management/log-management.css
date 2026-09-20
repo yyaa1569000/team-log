@@ -371,6 +371,12 @@
   background: #fecaca;
 }
 
+.log-actions {
+  display: flex;
+  align-items: center;
+  gap: 1px; /* 統一控制兩個按鈕之間的水平距離 */
+}
+
 /* ==========================================
    📱 響應式 RWD 補強（針對手機與微型螢幕 <= 640px）
    ========================================== */
@@ -456,4 +462,34 @@
   .log-grid {
     grid-template-columns: repeat(7, 1fr);
   }
+}
+
+/* ==========================================
+   💡 Gemini AI 智慧摘要卡片樣式
+   ========================================== */
+.ai-summary-box {
+  background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%);
+  border: 1px solid #bfdbfe;
+  border-left: 4px solid #3b82f6;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-top: 12px;
+}
+
+.ai-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: #1e40af;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.ai-content {
+  margin: 0;
+  font-size: 13px;
+  color: #334155;
+  line-height: 1.4;
+  white-space: pre-line;
 }

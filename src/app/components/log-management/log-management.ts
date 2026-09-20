@@ -14,7 +14,6 @@ import { ConfirmModalComponent } from '../confirm-modal/confirm-modal.component'
 export class LogManagement implements OnInit {
   logService = inject(LogService);
 
-  // 表單與驗證狀態
   newTitle = signal('');
   newCategory = signal('開發');
   newHours = signal<number | string>(1);
@@ -22,15 +21,12 @@ export class LogManagement implements OnInit {
   showErrors = signal(false);
   toastMessage = signal('');
 
-  // 搜尋與分類
   searchQuery = signal('');
   selectedCategory = signal('全部');
 
-  // 控制 Modal 彈窗
   showDeleteModal = signal(false);
   deletingLogId = signal<number | null>(null);
 
-  // 💡 修正 1：改為 getter 動態取得當前「本地時間」的 YYYY-MM-DD（解決 UTC 跨夜扣一天問題）
   get todayDate(): string {
     const d = new Date();
     const year = d.getFullYear();
@@ -39,22 +35,16 @@ export class LogManagement implements OnInit {
     return `${year}-${month}-${day}`;
   }
 
-  // 檢視模式
   viewMode = signal<'today' | 'history'>('today');
-
-  // 歷史紀錄日期篩選
   startDateFilter = signal<string>('');
   endDateFilter = signal<string>('');
 
   showWarningModal = signal<boolean>(false);
   warningMessage = signal<string>('');
-
-  // 編輯 ID 狀態
   editingLogId = signal<number | null>(null);
 
   Math = Math;
 
-  // 起始日期防呆
   onStartDateChange(event: any) {
     const selectedDate = event.target.value;
     const currentEnd = this.endDateFilter();
@@ -72,7 +62,6 @@ export class LogManagement implements OnInit {
     }
   }
 
-  // 結束日期防呆
   onEndDateChange(event: any) {
     const selectedEndDate = event.target.value;
     const currentStart = this.startDateFilter();
@@ -91,21 +80,19 @@ export class LogManagement implements OnInit {
     this.showWarningModal.set(false);
   }
 
-  // 💡 取得日誌顯示日期的輔助函式（防止 HTML 解析報錯）
   getLogDate(log: any): string {
     if (log.date) return log.date;
     if (log.createdAt) return String(log.createdAt).substring(0, 10);
     return '';
   }
 
-  // 💡 核心計算屬性：篩選 + 依日期降冪排序
   filteredLogs = computed(() => {
     const mode = this.viewMode();
     const query = this.searchQuery().toLowerCase().trim();
     const category = this.selectedCategory();
     const start = this.startDateFilter();
     const end = this.endDateFilter();
-    const today = this.todayDate; // 取得當前正確日期
+    const today = this.todayDate;
 
     return (
       this.logService
@@ -128,7 +115,6 @@ export class LogManagement implements OnInit {
 
           return matchesCategory && matchesSearch;
         })
-        // 💡 修正 2：改為 `dateB - dateA` 才是真正的最新日期降冪排序
         .sort((a, b) => {
           const dateA = new Date(this.getLogDate(a)).getTime();
           const dateB = new Date(this.getLogDate(b)).getTime();
@@ -137,7 +123,6 @@ export class LogManagement implements OnInit {
     );
   });
 
-  // --- 分頁狀態與邏輯 ---
   currentPage = signal<number>(1);
   pageSize = signal<number>(14);
 
@@ -220,7 +205,7 @@ export class LogManagement implements OnInit {
 
       this.logService.addLog(newLogData).subscribe({
         next: () => {
-          this.toastMessage.set('🎉 成功新增工作日誌！');
+          this.toastMessage.set('🎉 成功新增工作日誌（Gemini AI 摘要已同步生成）！');
           this.cancelEdit();
           setTimeout(() => this.toastMessage.set(''), 3000);
         },

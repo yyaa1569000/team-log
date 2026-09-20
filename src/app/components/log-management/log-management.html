@@ -178,6 +178,17 @@
             </div>
             <h4>{{ log.title }}</h4>
             <p>{{ log.content }}</p>
+
+            <!-- 💡 這裡安全地插入了 AI 摘要，且沒有改變你原有的外層結構 -->
+            @if ($any(log).aiSummary) {
+              <div class="ai-summary-box">
+                <div class="ai-header">
+                  <span class="ai-icon">✨</span>
+                  <span class="ai-title">Gemini AI 智慧摘要</span>
+                </div>
+                <p class="ai-content">{{ $any(log).aiSummary }}</p>
+              </div>
+            }
           </div>
         }
       </div>
