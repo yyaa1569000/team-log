@@ -24,6 +24,25 @@ export class TeamManagementComponent implements OnInit {
   // 判斷目前登入使用者是否具有 ADMIN 權限
   isAdmin = computed(() => this.authService.currentUser()?.role === 'ADMIN');
 
+  // 💡 用來記錄點擊複製時顯示「已複製」狀態的使用者 ID
+  copiedUserId = signal<number | null>(null);
+
+  // 💡 一鍵複製密碼到剪貼簿
+  copyPassword(user: User, event: Event) {
+    event.stopPropagation();
+    const pwd = user.password || '123456';
+
+    navigator.clipboard.writeText(pwd).then(() => {
+      if (user.id) {
+        this.copiedUserId.set(user.id);
+        setTimeout(() => {
+          if (this.copiedUserId() === user.id) {
+            this.copiedUserId.set(null);
+          }
+        }, 1500);
+      }
+    });
+  }
 
   ngOnInit() {
     this.teamService.fetchUsers();
@@ -34,7 +53,7 @@ export class TeamManagementComponent implements OnInit {
     this.newMemberUsername.set('');
     this.isModalOpen.set(true);
     this.teamService.fetchUsers();
-    if (!this.isAdmin()) return; // 雙重防護
+    if (!this.isAdmin()) return;
   }
 
   closeModal() {

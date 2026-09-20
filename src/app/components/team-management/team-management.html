@@ -20,7 +20,26 @@
               </span>
             </div>
             <span class="member-account">帳號：{{ user.username || '無' }}</span>
+
+            @if (isAdmin()) {
+              <div class="member-password-action">
+                <span class="password-label">密碼：</span>
+                <button 
+                  class="btn-copy-password" 
+                  (click)="copyPassword(user, $event)"
+                  [title]="'點擊複製密碼: ' + (user.password || '123456')"
+                >
+                  @if (copiedUserId() === user.id) {
+                    <span class="copied-text">✅ 已複製！</span>
+                  } @else {
+                    <span class="masked-text">•••••• 📋</span>
+                  }
+                </button>
+                <span class="copy-hint">請點擊複製</span>
+              </div>
+            }
           </div>
+
           <!-- 僅 ADMIN 可以刪除其他一般成員 -->
           @if (isAdmin() && user.role !== 'ADMIN') {
             <button class="btn-delete" (click)="openDeleteModal(user)" title="刪除成員">🗑️</button>
