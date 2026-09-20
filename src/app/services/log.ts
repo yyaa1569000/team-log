@@ -19,7 +19,7 @@ export interface Log {
 })
 export class LogService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8080/api/logs';
+  private apiUrl = '/api/logs';
 
   logs = signal<Log[]>([]);
 
