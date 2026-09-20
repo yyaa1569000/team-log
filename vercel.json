@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:match*",
+      "destination": "https://teamlog-backend.onrender.com/api/:match*"
+    }
+  ]
+}
