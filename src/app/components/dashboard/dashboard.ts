@@ -28,7 +28,7 @@ export class Dashboard implements OnInit, OnDestroy {
   // 💡 閒置自動登出設定改為 20 分鐘 (20 * 60 * 1000 毫秒)
   private idleTimeout: any;
   private countdownInterval: any;
-  private readonly IDLE_TIME_LIMIT = 20 * 60 * 1000; 
+  private readonly IDLE_TIME_LIMIT = 20 * 60 * 1000;
   private boundResetTimer = this.resetIdleTimer.bind(this);
 
   // 剩餘秒數 Signal (初始值為 20 分鐘的總秒數)
@@ -139,4 +139,11 @@ export class Dashboard implements OnInit, OnDestroy {
   logout() {
     this.authService.logout();
   }
+  // 💡 將剩餘秒數轉換為「分:秒」格式（例如 20:00）
+  formattedIdleTime = computed(() => {
+    const totalSeconds = this.remainingSeconds();
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes} 分 ${String(seconds).padStart(2, '0')} 秒`;
+  });
 }

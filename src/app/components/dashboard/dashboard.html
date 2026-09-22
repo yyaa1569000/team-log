@@ -33,9 +33,9 @@
 
       <!-- 閒置倒數計時器 -->
       <div class="sidebar-idle-badge">
-        ⏳ 閒置倒數：<span>{{ remainingSeconds() }}</span> 秒
+        ⏳ 閒置倒數：<span>{{ formattedIdleTime() }}</span>
       </div>
-      
+
       <button class="btn-logout" (click)="logout()">🚪 登出系統</button>
     </div>
   </aside>
@@ -92,5 +92,6 @@
   [showCancel]="false"
   type="warning"
   (confirmed)="onConfirmAutoLogout()"
-  (cancelled)="onCancelAutoLogout()">
+  (cancelled)="onCancelAutoLogout()"
+>
 </app-confirm-modal>
