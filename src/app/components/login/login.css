@@ -118,18 +118,18 @@
    ========================================== */
 @media (max-width: 480px) {
   .login-container {
-    padding: 16px; /* 防止極小螢幕貼邊 */
+    padding: 16px;
   }
 
   .login-card {
-    padding: 24px 20px; /* 手機上內距稍微收緊 */
+    padding: 24px 20px;
   }
 }
 
-/* 💡 面試測試帳密提示樣式 */
+/* 💡 面試測試帳密提示樣式與點擊互動 */
 .demo-credentials-hint {
   margin-top: 20px;
-  padding: 12px 14px;
+  padding: 10px 14px;
   background-color: #f7fafc;
   border: 1px dashed #cbd5e0;
   border-radius: 8px;
@@ -138,17 +138,38 @@
 
 .hint-content {
   display: flex;
-  justify-content: center;
-  gap: 12px;
+  flex-direction: column;
+  gap: 6px;
   font-size: 13px;
   color: #2d3748;
 }
 
-.hint-content code {
+.copyable-row {
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background-color 0.2s, color 0.2s;
+  display: inline-block;
+  margin: 0 auto;
+}
+
+.copyable-row:hover {
+  background-color: #edf2f7;
+  color: #1a202c;
+}
+
+.copyable-row code {
   background: #edf2f7;
   padding: 2px 6px;
   border-radius: 4px;
   color: #3182ce;
   font-weight: 600;
   font-family: monospace;
+}
+
+.copied-tip {
+  color: #16a34a;
+  font-weight: 600;
+  margin-left: 6px;
+  font-size: 12px;
 }

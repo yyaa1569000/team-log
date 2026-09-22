@@ -51,10 +51,29 @@
 
       <button type="submit" class="btn-submit">登入</button>
     </form>
+    
     <div class="demo-credentials-hint">
       <div class="hint-content">
-        <span>管理員帳號：<code>dragon</code></span><br>
-        <span>密碼：<code>dragon7788</code></span>
+        <div 
+          class="copyable-row" 
+          (click)="copyToClipboard('dragon', 'username', $event)"
+          title="點擊複製管理員帳號"
+        >
+          <span>管理員帳號：<code>dragon</code></span>
+          @if (copiedField() === 'username') {
+            <span class="copied-tip">（已複製！）</span>
+          }
+        </div>
+        <div 
+          class="copyable-row" 
+          (click)="copyToClipboard('dragon7788', 'password', $event)"
+          title="點擊複製密碼"
+        >
+          <span>密碼：<code>dragon7788</code></span>
+          @if (copiedField() === 'password') {
+            <span class="copied-tip">（已複製！）</span>
+          }
+        </div>
       </div>
     </div>
   </div>

@@ -17,7 +17,7 @@
       <a routerLink="settings" routerLinkActive="active">⚙️ 系統設定</a>
     </nav>
 
-    <!-- 💡 改到這裡：底部資訊卡片 + 登出按鈕 -->
+    <!-- 底部資訊卡片 + 倒數計時器 + 登出按鈕 -->
     <div class="sidebar-footer">
       @if (authService.currentUser(); as user) {
         <div class="user-profile-card">
@@ -31,10 +31,11 @@
         </div>
       }
 
-      <!-- 閒置倒數 -->
+      <!-- 閒置倒數計時器 -->
       <div class="sidebar-idle-badge">
         ⏳ 閒置倒數：<span>{{ remainingSeconds() }}</span> 秒
       </div>
+      
       <button class="btn-logout" (click)="logout()">🚪 登出系統</button>
     </div>
   </aside>

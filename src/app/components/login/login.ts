@@ -18,11 +18,27 @@ export class Login implements OnInit {
   password = signal('');
   errorMessage = signal('');
 
+  // 💡 記錄哪一個欄位剛剛被複製過以顯示提示
+  copiedField = signal<string | null>(null);
+
   ngOnInit() {
     // 已登入者若進入 /login，自動跳轉至儀表板團隊頁
     if (this.authService.isLoggedIn()) {
       this.router.navigate(['/dashboard']);
     }
+  }
+
+  // 💡 一鍵複製帳號或密碼到剪貼簿
+  copyToClipboard(text: string, fieldType: string, event: Event) {
+    event.stopPropagation();
+    navigator.clipboard.writeText(text).then(() => {
+      this.copiedField.set(fieldType);
+      setTimeout(() => {
+        if (this.copiedField() === fieldType) {
+          this.copiedField.set(null);
+        }
+      }, 1500); // 1.5 秒後清除提示
+    });
   }
 
   onLogin() {
