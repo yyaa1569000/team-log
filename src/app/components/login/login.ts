@@ -16,6 +16,7 @@ export class Login implements OnInit {
 
   username = signal('');
   password = signal('');
+  rememberMe = signal(false); // 💡 記住我狀態
   errorMessage = signal('');
 
   // 💡 記錄哪一個欄位剛剛被複製過以顯示提示
@@ -25,6 +26,13 @@ export class Login implements OnInit {
     // 已登入者若進入 /login，自動跳轉至儀表板團隊頁
     if (this.authService.isLoggedIn()) {
       this.router.navigate(['/dashboard']);
+    }
+
+    // 💡 初始化時檢查是否有儲存的帳號
+    const savedUsername = localStorage.getItem('saved_username');
+    if (savedUsername) {
+      this.username.set(savedUsername);
+      this.rememberMe.set(true);
     }
   }
 
@@ -54,7 +62,14 @@ export class Login implements OnInit {
       password: this.password().trim()
     }).subscribe({
       next: () => {
-        // 👈 正確導向子路由 /dashboard/team
+        // 💡 根據「記住我」勾選狀態處理 localStorage
+        if (this.rememberMe()) {
+          localStorage.setItem('saved_username', this.username().trim());
+        } else {
+          localStorage.removeItem('saved_username');
+        }
+
+        // 👈 正確導向子路由 /dashboard
         this.router.navigate(['/dashboard']);
       },
       error: (err) => {

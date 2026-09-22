@@ -45,7 +45,15 @@
       </div>
 
       <div class="form-actions">
-        <label class="remember-me"> <input type="checkbox" /> 記住我 </label>
+        <!-- 💡 綁定記住我狀態 -->
+        <label class="remember-me">
+          <input 
+            type="checkbox" 
+            [ngModel]="rememberMe()" 
+            (ngModelChange)="rememberMe.set($event)" 
+            name="rememberMe" 
+          /> 記住我
+        </label>
         <a href="#" class="forgot-password">忘記密碼？</a>
       </div>
 
