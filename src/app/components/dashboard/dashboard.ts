@@ -54,15 +54,49 @@ export class Dashboard implements OnInit {
       })
       .slice(0, 5);
   });
+  
 
   ngOnInit() {
     this.logService.fetchLogs();
     this.settingsService.fetchSettings();
     this.dashboardService.fetchStats();
-    
+
     // 初始化先判斷一次當前網址
     const currentUrl = this.router.url;
     this.isOverview = currentUrl === '/dashboard' || currentUrl === '/dashboard/';
+    // 1. 每次進到儀表板時抓取一次最新設定
+    this.settingsService.fetchSettings();
+
+    // 2. 啟動背景時間檢查器
+    this.startReminderChecker();
+  }
+
+  startReminderChecker() {
+    // 每 30 秒檢查一次當前時間
+    setInterval(() => {
+      const settings = this.settingsService.settings();
+      
+      // 檢查是否有點選啟用提醒，且有設定時間
+      if (settings && (settings as any).dailyReminder && (settings as any).reminderTime) {
+        const now = new Date();
+        const currentHours = String(now.getHours()).padStart(2, '0');
+        const currentMinutes = String(now.getMinutes()).padStart(2, '0');
+        const currentTimeStr = `${currentHours}:${currentMinutes}`;
+
+        console.log('當前時間：', currentTimeStr, '設定時間：', (settings as any).reminderTime);
+        // 比對是否符合設定的時間 (例如 "15:02")
+        if (currentTimeStr === (settings as any).reminderTime) {
+          const lastAlertDate = sessionStorage.getItem('last_reminder_date');
+          const todayStr = now.toDateString();
+
+          // 確保今天同一個時間到了只跳出一次提醒
+          if (lastAlertDate !== todayStr) {
+            sessionStorage.setItem('last_reminder_date', todayStr);
+            alert('⏰ 叮咚！設定的時間到了，今天的工作日誌還沒填寫，快去寫日誌吧！');
+          }
+        }
+      }
+    }, 30000); // 每 30 秒執行一次
   }
 
   logout() {

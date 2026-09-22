@@ -25,27 +25,6 @@
         />
       </div>
 
-<div class="checkbox-group">
-  <label class="checkbox-item">
-    <input type="checkbox" [(ngModel)]="formData.dailyReminder" name="dailyReminder" />
-    <span class="checkbox-label">⏰ 啟用每日填寫日誌提醒</span>
-  </label>
-
-  <!-- 💡 新增：當勾選啟用提醒時，才顯示時間選擇器 -->
-  @if (formData.dailyReminder) {
-    <div class="form-group" style="margin-top: 10px; margin-left: 24px;">
-      <label for="reminderTime">提醒時間</label>
-      <input
-        id="reminderTime"
-        type="time"
-        [(ngModel)]="formData.reminderTime"
-        name="reminderTime"
-        style="max-width: 180px;"
-      />
-    </div>
-  }
-</div>
-
       <div class="form-actions">
         <button type="submit" class="btn-primary">儲存系統設定</button>
       </div>
