@@ -76,3 +76,15 @@
     }
   </main>
 </div>
+
+<!-- 🔒 閒置自動登出提示視窗 (使用共用 ConfirmModal) -->
+<app-confirm-modal
+  [isOpen]="isAutoLogoutModalOpen()"
+  title="安全性登出通知"
+  message="由於您長時間未進行任何操作，為了保護帳號安全，系統已自動將您登出。"
+  confirmText="重新登入"
+  [showCancel]="false"
+  type="warning"
+  (confirmed)="onConfirmAutoLogout()"
+  (cancelled)="onCancelAutoLogout()">
+</app-confirm-modal>

@@ -11,26 +11,26 @@ export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
 
-  // 修正型別語法：User | null
+  // 修正型別語法：User | null，改用 sessionStorage 確保關閉分頁即清除
   currentUser = signal<User | null>(this.getUserFromStorage());
 
   login(credentials: { username: string; password: string }): Observable<User> {
     return this.http.post<User>('/api/auth/login', credentials).pipe(
       tap((user) => {
-        localStorage.setItem('currentUser', JSON.stringify(user));
+        sessionStorage.setItem('currentUser', JSON.stringify(user));
         this.currentUser.set(user);
       })
     );
   }
 
   logout(): void {
-    localStorage.removeItem('currentUser');
+    sessionStorage.removeItem('currentUser');
     this.currentUser.set(null);
     this.router.navigate(['/login']);
   }
 
   isLoggedIn(): boolean {
-    return !!localStorage.getItem('currentUser');
+    return !!sessionStorage.getItem('currentUser');
   }
 
   getCurrentUser(): User | null {
@@ -38,7 +38,7 @@ export class AuthService {
   }
 
   private getUserFromStorage(): User | null {
-    const data = localStorage.getItem('currentUser');
+    const data = sessionStorage.getItem('currentUser');
     return data ? JSON.parse(data) : null;
   }
 }

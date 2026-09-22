@@ -86,6 +86,10 @@ export class Settings implements OnInit {
       next: (updatedUser) => {
         // 同步更新前端 AuthService 狀態
         this.authService.currentUser.set(updatedUser);
+
+        // 💡 確保 sessionStorage 內的資料也同步更新
+        sessionStorage.setItem('currentUser', JSON.stringify(updatedUser));
+
         this.userFormData.password = ''; // 清空密碼欄位
         this.accountToastMessage.set('✨ 個人帳號與密碼更新成功！');
         setTimeout(() => this.accountToastMessage.set(''), 3000);
