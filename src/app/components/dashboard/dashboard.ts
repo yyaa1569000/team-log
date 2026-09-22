@@ -6,12 +6,12 @@ import { SettingsService } from '../../services/settings';
 import { filter } from 'rxjs';
 import { DashboardService } from '../../services/dashboard.service';
 import { AuthService } from '../../services/auth.service';
-import { ConfirmModalComponent } from '../../components/confirm-modal/confirm-modal.component'; // 💡 依你的實際路徑調整
+import { ConfirmModalComponent } from '../../components/confirm-modal/confirm-modal.component';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ConfirmModalComponent], // 💡 加入共用元件
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ConfirmModalComponent],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
@@ -25,12 +25,15 @@ export class Dashboard implements OnInit, OnDestroy {
   todayDate = new Date().toLocaleDateString('sv');
   isOverview = false;
 
-  // 閒置計時設定 (測試用 10 秒)
+  // 閒置計時設定 (測試用 10 秒 = 10000 毫秒)
   private idleTimeout: any;
+  private countdownInterval: any;
   private readonly IDLE_TIME_LIMIT = 10 * 1000; 
   private boundResetTimer = this.resetIdleTimer.bind(this);
 
-  // 💡 控制共用 ConfirmModal 的開關與狀態
+  // 💡 剩餘秒數 Signal (初始值為 10)
+  remainingSeconds = signal(this.IDLE_TIME_LIMIT / 1000);
+
   isAutoLogoutModalOpen = signal(false);
 
   constructor() {
@@ -86,8 +89,23 @@ export class Dashboard implements OnInit, OnDestroy {
     this.resetIdleTimer();
   }
 
+  // 重置閒置計時器與倒數計時
   resetIdleTimer() {
     clearTimeout(this.idleTimeout);
+    clearInterval(this.countdownInterval);
+
+    // 重置剩餘秒數
+    this.remainingSeconds.set(this.IDLE_TIME_LIMIT / 1000);
+
+    // 啟動每秒扣 1 的倒數
+    this.countdownInterval = setInterval(() => {
+      const current = this.remainingSeconds();
+      if (current > 0) {
+        this.remainingSeconds.set(current - 1);
+      }
+    }, 1000);
+
+    // 啟動最終自動登出計時
     this.idleTimeout = setTimeout(() => {
       this.performAutoLogout();
     }, this.IDLE_TIME_LIMIT);
@@ -95,6 +113,7 @@ export class Dashboard implements OnInit, OnDestroy {
 
   clearIdleListener() {
     clearTimeout(this.idleTimeout);
+    clearInterval(this.countdownInterval);
     window.removeEventListener('mousemove', this.boundResetTimer);
     window.removeEventListener('keydown', this.boundResetTimer);
     window.removeEventListener('click', this.boundResetTimer);
@@ -102,19 +121,16 @@ export class Dashboard implements OnInit, OnDestroy {
     window.removeEventListener('touchstart', this.boundResetTimer);
   }
 
-  // 時間到時觸發，打開共用 Modal
   performAutoLogout() {
     this.clearIdleListener();
     this.isAutoLogoutModalOpen.set(true);
   }
 
-  // 使用者點擊確定（執行登出）
   onConfirmAutoLogout() {
     this.isAutoLogoutModalOpen.set(false);
     this.authService.logout();
   }
 
-  // 因為自動登出不需要取消選項，點取消可以直接導回登入或關閉（或直接當作確認登出）
   onCancelAutoLogout() {
     this.isAutoLogoutModalOpen.set(false);
     this.authService.logout();
