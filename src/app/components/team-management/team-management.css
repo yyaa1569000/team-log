@@ -2,6 +2,7 @@
   padding: 32px;
   width: 100%;
   box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 .header-section {
@@ -10,6 +11,8 @@
   align-items: center;
   margin-bottom: 28px;
   width: 100%;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .header-section h2 {
@@ -53,13 +56,14 @@
   background-color: #e2e8f0;
 }
 
-/* 💡 成員網格改回靠左對齊，並設定合適的最大寬度與間距 */
+/* 💡 成員網格在手機上自動改為單欄 100% 滿版，防止溢出 */
 .member-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 320px));
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 20px;
-  justify-content: start; /* 確保內容靠左排列 */
+  justify-content: start;
   width: 100%;
+  box-sizing: border-box;
 }
 
 .member-card {
@@ -72,6 +76,8 @@
   align-items: flex-start;
   gap: 14px;
   overflow: hidden;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .avatar {
@@ -125,6 +131,8 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  padding: 16px;
+  box-sizing: border-box;
 }
 
 .modal-card {
@@ -134,6 +142,7 @@
   border-radius: 16px;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
   padding: 24px;
+  box-sizing: border-box;
   animation: modalFadeIn 0.2s ease-out;
 }
 
@@ -188,6 +197,8 @@
   border: 1px solid #cbd5e1;
   font-size: 1rem;
   outline: none;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .modal-body input:focus {
@@ -296,7 +307,6 @@
   font-family: monospace;
 }
 
-/* 💡 強制密碼操作列單行顯示，絕不拆行或跑版 */
 .member-password-action {
   display: flex;
   align-items: center;
@@ -348,4 +358,35 @@
   user-select: none;
   white-space: nowrap;
   flex-shrink: 0;
+}
+
+/* ==========================================
+   📱 手機版 RWD 響應式優化 (<= 640px)
+   ========================================== */
+@media (max-width: 640px) {
+  .team-container {
+    padding: 16px;
+  }
+
+  .header-section {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .header-section .btn-primary {
+    width: 100%;
+    text-align: center;
+  }
+
+  .modal-card {
+    padding: 18px;
+  }
+
+  .modal-footer {
+    flex-direction: column-reverse;
+  }
+
+  .modal-footer button {
+    width: 100%;
+  }
 }
