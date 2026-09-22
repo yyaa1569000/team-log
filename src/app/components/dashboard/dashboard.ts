@@ -25,13 +25,13 @@ export class Dashboard implements OnInit, OnDestroy {
   todayDate = new Date().toLocaleDateString('sv');
   isOverview = false;
 
-  // 閒置計時設定 (測試用 10 秒 = 10000 毫秒)
+  // 💡 閒置自動登出設定改為 20 分鐘 (20 * 60 * 1000 毫秒)
   private idleTimeout: any;
   private countdownInterval: any;
-  private readonly IDLE_TIME_LIMIT = 10 * 1000; 
+  private readonly IDLE_TIME_LIMIT = 20 * 60 * 1000; 
   private boundResetTimer = this.resetIdleTimer.bind(this);
 
-  // 💡 剩餘秒數 Signal (初始值為 10)
+  // 剩餘秒數 Signal (初始值為 20 分鐘的總秒數)
   remainingSeconds = signal(this.IDLE_TIME_LIMIT / 1000);
 
   isAutoLogoutModalOpen = signal(false);
