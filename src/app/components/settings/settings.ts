@@ -20,11 +20,11 @@ export class Settings implements OnInit {
   toastMessage = signal('');
   accountToastMessage = signal('');
 
-  // 1. 系統設定表單資料
-  formData: SystemSettings = {
+  // 1. 系統設定表單資料（已移除 pushNotification，改為 reminderTime）
+  formData: any = {
     workspaceName: '',
     dailyReminder: false,
-    pushNotification: false,
+    reminderTime: '17:00',
   };
 
   // 2. 個人帳號設定表單資料
@@ -39,7 +39,10 @@ export class Settings implements OnInit {
     effect(() => {
       const data = this.settingsService.settings();
       if (data) {
-        this.formData = { ...data };
+        this.formData = {
+          ...data,
+          reminderTime: (data as any).reminderTime || '17:00',
+        };
       }
     });
 
@@ -61,7 +64,7 @@ export class Settings implements OnInit {
 
   // 儲存系統設定
   saveSettings() {
-    this.settingsService.updateSettings(this.formData).subscribe({
+    this.settingsService.updateSettings(this.formData as SystemSettings).subscribe({
       next: (res) => {
         if (res) this.settingsService.settings.set(res);
         this.toastMessage.set('⚙️ 系統設定已成功同步至資料庫！');
