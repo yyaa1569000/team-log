@@ -41,6 +41,7 @@ export class Settings implements OnInit {
       if (data) {
         this.formData = {
           ...data,
+          // 💡 如果資料庫的 reminderTime 是空的或 null，才給予預設值 "17:00"
           reminderTime: (data as any).reminderTime || '17:00',
         };
       }
