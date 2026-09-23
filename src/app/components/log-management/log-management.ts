@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { LogService } from '../../services/log';
 import { ConfirmModalComponent } from '../confirm-modal/confirm-modal.component';
 import { AuthService } from '../../services/auth.service';
-import { forkJoin } from 'rxjs'; // 💡 引入 forkJoin 來處理多筆刪除 API 請求
+import { forkJoin } from 'rxjs'; // 處理多筆刪除
 
 @Component({
   selector: 'app-log-management',
@@ -24,10 +24,10 @@ export class LogManagement implements OnInit {
   showErrors = signal(false);
   toastMessage = signal('');
 
-  // 💡 1. 新增：AI 提交時的 Loading 狀態
+  // AI 提交時的 Loading 狀態
   isSubmitting = signal(false);
 
-  // 💡 2. 新增：批次刪除狀態管理
+  // 批次刪除狀態管理
   selectedLogIds = signal<Set<number>>(new Set());
   deleteMode = signal<'single' | 'batch' | 'all' | null>(null);
 
@@ -38,7 +38,7 @@ export class LogManagement implements OnInit {
   showDeleteModal = signal(false);
   deletingLogId = signal<number | null>(null);
 
-  // 💡 3. 新增：動態計算刪除 Modal 的標題與訊息
+  // 動態計算刪除 Modal 的標題與訊息
   deleteModalTitle = computed(() => {
     const mode = this.deleteMode();
     if (mode === 'batch') return `確認刪除這 ${this.selectedLogIds().size} 筆日誌？`;
@@ -48,8 +48,7 @@ export class LogManagement implements OnInit {
 
   deleteModalMessage = computed(() => {
     const mode = this.deleteMode();
-    if (mode === 'all')
-      return '此操作將會清空目前篩選出的所有日誌，刪除後資料將無法復原，您確定要繼續嗎？';
+    if (mode === 'all') return '此操作將會清空目前篩選出的所有日誌，刪除後資料將無法復原，您確定要繼續嗎？';
     return '刪除後資料將無法復原，您確定要繼續嗎？';
   });
 
@@ -76,6 +75,19 @@ export class LogManagement implements OnInit {
     const users = logs.map((l) => l.authorName).filter(Boolean);
     return [...new Set(users)];
   });
+
+  // 💡 攔截瀏覽器的重新整理與關閉事件 (防止 AI 執行中斷)
+  @HostListener('window:beforeunload', ['$event'])
+  unloadNotification($event: any) {
+    if (this.isSubmitting()) {
+      $event.returnValue = 'AI 正在生成摘要，確定要離開嗎？';
+    }
+  }
+
+  @HostListener('window:resize')
+  onResize() {
+    this.updatePageSize();
+  }
 
   onStartDateChange(event: any) {
     const selectedDate = event.target.value;
@@ -191,12 +203,6 @@ export class LogManagement implements OnInit {
     this.updatePageSize();
   }
 
-  @HostListener('window:resize')
-  onResize() {
-    this.updatePageSize();
-  }
-
-  // 💡 4. 多筆選取與清除邏輯
   toggleSelection(id: number) {
     const current = new Set(this.selectedLogIds());
     if (current.has(id)) current.delete(id);
@@ -220,7 +226,7 @@ export class LogManagement implements OnInit {
       return;
     }
 
-    this.isSubmitting.set(true); // 🚀 啟動 Loading 動畫與防呆
+    this.isSubmitting.set(true);
     const editId = this.editingLogId();
     const currentUser = this.authService.currentUser();
 
@@ -237,13 +243,13 @@ export class LogManagement implements OnInit {
 
       this.logService.updateLog(editId, updatedLogData).subscribe({
         next: () => {
-          this.isSubmitting.set(false); // ✅ 關閉 Loading
+          this.isSubmitting.set(false);
           this.toastMessage.set('✏️ 成功更新工作日誌！');
           this.cancelEdit();
           setTimeout(() => this.toastMessage.set(''), 3000);
         },
         error: (err) => {
-          this.isSubmitting.set(false); // ❌ 關閉 Loading
+          this.isSubmitting.set(false);
           console.error('更新失敗：', err);
         },
       });
@@ -260,20 +266,19 @@ export class LogManagement implements OnInit {
 
       this.logService.addLog(newLogData).subscribe({
         next: () => {
-          this.isSubmitting.set(false); // ✅ 關閉 Loading
+          this.isSubmitting.set(false);
           this.toastMessage.set('🎉 成功新增工作日誌！');
           this.cancelEdit();
           setTimeout(() => this.toastMessage.set(''), 3000);
         },
         error: (err) => {
-          this.isSubmitting.set(false); // ❌ 關閉 Loading
+          this.isSubmitting.set(false);
           console.error('寫入失敗：', err);
         },
       });
     }
   }
 
-  // 💡 5. 開啟刪除 Modal 的三種模式
   openDeleteModal(id?: number) {
     if (!id) return;
     this.deletingLogId.set(id);
@@ -293,7 +298,6 @@ export class LogManagement implements OnInit {
     this.showDeleteModal.set(true);
   }
 
-  // 💡 6. 整合多重刪除邏輯
   handleConfirmDelete() {
     const mode = this.deleteMode();
 
@@ -330,14 +334,13 @@ export class LogManagement implements OnInit {
     }
   }
 
-  // 💡 統一處理刪除成功後的收尾動作
   finishDelete(msg: string) {
     this.toastMessage.set(msg);
     this.showDeleteModal.set(false);
     this.deletingLogId.set(null);
     this.deleteMode.set(null);
-    this.selectedLogIds.set(new Set()); // 清空選取狀態
-    this.logService.fetchLogs(); // 重新拉取最新資料
+    this.selectedLogIds.set(new Set());
+    this.logService.fetchLogs();
     setTimeout(() => this.toastMessage.set(''), 3000);
   }
 
@@ -368,13 +371,13 @@ export class LogManagement implements OnInit {
   }
 
   totalHours = computed(() =>
-    this.filteredLogs().reduce((sum, log) => sum + (Number(log.hours) || 0), 0),
+    this.filteredLogs().reduce((sum, log) => sum + (Number(log.hours) || 0), 0)
   );
   totalLogsCount = computed(() => this.filteredLogs().length);
   devCategoryHours = computed(() =>
     this.filteredLogs()
       .filter((log) => log.category === '開發')
-      .reduce((sum, log) => sum + (Number(log.hours) || 0), 0),
+      .reduce((sum, log) => sum + (Number(log.hours) || 0), 0)
   );
 
   filterStatusText = computed(() => {
@@ -385,12 +388,4 @@ export class LogManagement implements OnInit {
     if (end) return `目前顯示：${end} 之前`;
     return '目前顯示：全部歷史紀錄';
   });
-  // 💡 攔截瀏覽器的重新整理與關閉事件
-  @HostListener('window:beforeunload', ['$event'])
-  unloadNotification($event: any) {
-    if (this.isSubmitting()) {
-      // 只要把 returnValue 設為 true 或任意字串，瀏覽器就會自動跳出警告視窗阻擋離開
-      $event.returnValue = 'AI 正在生成摘要，確定要離開嗎？';
-    }
-  }
 }
