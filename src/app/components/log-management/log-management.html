@@ -127,7 +127,7 @@
         <!-- 💡 提交按鈕：加入 Loading 狀態判斷與 spinner 動畫 -->
         <button class="btn-submit" (click)="submitLog()" [disabled]="isSubmitting()">
           @if (isSubmitting()) {
-            <span class="spinner"></span> 🧠 AI 智慧摘要生成中... (約 5~10 秒，請勿關閉視窗)
+            <span class="spinner"></span> 🧠 AI 智慧摘要生成中... (約 5~30 秒，請勿關閉視窗)
           } @else {
             {{ editingLogId() ? '儲存變更' : '提交日誌' }}
           }
