@@ -9,7 +9,8 @@ import { LoadingService } from './loading.service';
   template: `
     <div *ngIf="loadingService.isLoading$ | async" class="overlay">
       <div class="spinner"></div>
-      <p>連線中，請稍候...</p>
+      <!-- 💡 改為動態綁定文字 -->
+      <p>{{ loadingService.message$ | async }}</p>
     </div>
   `,
   styles: [`

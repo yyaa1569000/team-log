@@ -4,7 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { LogService } from '../../services/log';
 import { ConfirmModalComponent } from '../confirm-modal/confirm-modal.component';
 import { AuthService } from '../../services/auth.service';
-import { forkJoin } from 'rxjs'; // 處理多筆刪除
+import { forkJoin } from 'rxjs'; 
+import { LoadingService } from '../../loading.service';
 
 @Component({
   selector: 'app-log-management',
@@ -16,6 +17,7 @@ import { forkJoin } from 'rxjs'; // 處理多筆刪除
 export class LogManagement implements OnInit {
   logService = inject(LogService);
   authService = inject(AuthService);
+  loadingService = inject(LoadingService); // 💡 注入 LoadingService
 
   newTitle = signal('');
   newCategory = signal('開發');
@@ -24,7 +26,7 @@ export class LogManagement implements OnInit {
   showErrors = signal(false);
   toastMessage = signal('');
 
-  // AI 提交時的 Loading 狀態
+  // AI 提交時的 Loading 狀態 (控制按鈕用)
   isSubmitting = signal(false);
 
   // 批次刪除狀態管理
@@ -76,7 +78,7 @@ export class LogManagement implements OnInit {
     return [...new Set(users)];
   });
 
-  // 💡 攔截瀏覽器的重新整理與關閉事件 (防止 AI 執行中斷)
+  // 攔截瀏覽器的重新整理與關閉事件 (防止 AI 執行中斷)
   @HostListener('window:beforeunload', ['$event'])
   unloadNotification($event: any) {
     if (this.isSubmitting()) {
@@ -227,6 +229,9 @@ export class LogManagement implements OnInit {
     }
 
     this.isSubmitting.set(true);
+    // 💡 呼叫 API 前，手動開啟 Loading 並塞入自訂文字，這樣 Interceptor 就不會蓋掉它！
+    this.loadingService.show('🧠 AI 智慧摘要生成中... (約 5~10 秒，請勿關閉視窗)');
+
     const editId = this.editingLogId();
     const currentUser = this.authService.currentUser();
 
