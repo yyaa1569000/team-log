@@ -4,14 +4,15 @@ import { catchError, tap } from 'rxjs/operators';
 import { of } from 'rxjs';
 
 export interface Log {
-  id?: number;
+  id: number;
   title: string;
-  content: string;
   category: string;
   hours: number;
-  date?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  content: string;
+  date: string;
+  username?: string;
+  authorName?: string;
+  aiSummary?: string; 
 }
 
 @Injectable({

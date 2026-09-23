@@ -498,3 +498,13 @@
   line-height: 1.4;
   white-space: pre-line;
 }
+
+/* 💡 新增作者標籤樣式 */
+.author-badge {
+  background: #e2e8f0;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #1e293b;
+  font-weight: 600;
+}

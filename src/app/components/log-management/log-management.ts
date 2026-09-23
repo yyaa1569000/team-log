@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LogService } from '../../services/log';
 import { ConfirmModalComponent } from '../confirm-modal/confirm-modal.component';
+import { AuthService } from '../../services/auth.service'; // 💡 引入 AuthService
 
 @Component({
   selector: 'app-log-management',
@@ -11,8 +12,10 @@ import { ConfirmModalComponent } from '../confirm-modal/confirm-modal.component'
   templateUrl: './log-management.html',
   styleUrls: ['./log-management.css'],
 })
+
 export class LogManagement implements OnInit {
   logService = inject(LogService);
+  authService = inject(AuthService); // 💡 注入
 
   newTitle = signal('');
   newCategory = signal('開發');
@@ -23,6 +26,7 @@ export class LogManagement implements OnInit {
 
   searchQuery = signal('');
   selectedCategory = signal('全部');
+  selectedUser = signal('全部'); // 💡 管理員用的成員篩選狀態
 
   showDeleteModal = signal(false);
   deletingLogId = signal<number | null>(null);
@@ -45,27 +49,29 @@ export class LogManagement implements OnInit {
 
   Math = Math;
 
+  // 💡 動態提取目前有寫日誌的所有成員名單 (供管理員下拉選單使用)
+  uniqueUsers = computed(() => {
+    const logs = this.logService.logs();
+    const users = logs.map(l => l.authorName).filter(Boolean);
+    return [...new Set(users)];
+  });
+
   onStartDateChange(event: any) {
     const selectedDate = event.target.value;
     const currentEnd = this.endDateFilter();
-
     if (currentEnd && selectedDate > currentEnd) {
       this.warningMessage.set('開始日期不能晚於結束日期！');
       this.showWarningModal.set(true);
       event.target.value = this.startDateFilter();
       return;
     }
-
     this.startDateFilter.set(selectedDate);
-    if (!currentEnd) {
-      this.endDateFilter.set(selectedDate);
-    }
+    if (!currentEnd) this.endDateFilter.set(selectedDate);
   }
 
   onEndDateChange(event: any) {
     const selectedEndDate = event.target.value;
     const currentStart = this.startDateFilter();
-
     if (currentStart && selectedEndDate && selectedEndDate < currentStart) {
       this.warningMessage.set('結束日期不能早於開始日期！');
       this.showWarningModal.set(true);
@@ -86,41 +92,49 @@ export class LogManagement implements OnInit {
     return '';
   }
 
+  // 💡 核心過濾器：加上權限與人員篩選
   filteredLogs = computed(() => {
     const mode = this.viewMode();
     const query = this.searchQuery().toLowerCase().trim();
     const category = this.selectedCategory();
+    const targetUser = this.selectedUser();
     const start = this.startDateFilter();
     const end = this.endDateFilter();
     const today = this.todayDate;
+    const currentUser = this.authService.currentUser();
 
-    return (
-      this.logService
-        .logs()
-        .filter((log) => {
-          const logDateOnly = this.getLogDate(log);
+    return this.logService.logs().filter((log) => {
+      // 1. RBAC 權限與成員過濾邏輯
+      if (currentUser?.role !== 'ADMIN') {
+        // 一般成員只能看到自己的日誌
+        if (log.username !== currentUser?.username) return false;
+      } else {
+        // 管理員如果選了特定成員
+        if (targetUser !== '全部' && log.authorName !== targetUser) return false;
+      }
 
-          if (mode === 'today') {
-            if (logDateOnly !== today) return false;
-          } else {
-            if (start && logDateOnly < start) return false;
-            if (end && logDateOnly > end) return false;
-          }
+      // 2. 日期過濾邏輯
+      const logDateOnly = this.getLogDate(log);
+      if (mode === 'today') {
+        if (logDateOnly !== today) return false;
+      } else {
+        if (start && logDateOnly < start) return false;
+        if (end && logDateOnly > end) return false;
+      }
 
-          const matchesCategory = category === '全部' || log.category === category;
-          const matchesSearch =
-            !query ||
-            log.title.toLowerCase().includes(query) ||
-            log.content.toLowerCase().includes(query);
+      // 3. 分類與關鍵字過濾邏輯
+      const matchesCategory = category === '全部' || log.category === category;
+      const matchesSearch = !query || 
+                            log.title.toLowerCase().includes(query) || 
+                            log.content.toLowerCase().includes(query) ||
+                            (log.authorName && log.authorName.toLowerCase().includes(query));
 
-          return matchesCategory && matchesSearch;
-        })
-        .sort((a, b) => {
-          const dateA = new Date(this.getLogDate(a)).getTime();
-          const dateB = new Date(this.getLogDate(b)).getTime();
-          return dateB - dateA;
-        })
-    );
+      return matchesCategory && matchesSearch;
+    }).sort((a, b) => {
+      const dateA = new Date(this.getLogDate(a)).getTime();
+      const dateB = new Date(this.getLogDate(b)).getTime();
+      return dateB - dateA;
+    });
   });
 
   currentPage = signal<number>(1);
@@ -146,14 +160,11 @@ export class LogManagement implements OnInit {
   private updatePageSize() {
     const width = window.innerWidth;
     let cols = 1;
-
     if (width >= 1400) cols = 7;
     else if (width >= 1024) cols = 2;
     else if (width >= 640) cols = 2;
     else cols = 1;
-
-    const calculatedSize = cols * 2;
-    this.pageSize.set(Math.min(calculatedSize, 14));
+    this.pageSize.set(Math.min(cols * 2, 14));
   }
 
   ngOnInit() {
@@ -173,10 +184,10 @@ export class LogManagement implements OnInit {
     }
 
     const editId = this.editingLogId();
+    const currentUser = this.authService.currentUser(); // 💡 取得當前使用者
 
     if (editId) {
       const originalLog = this.logService.logs().find((l) => l.id === editId);
-
       const updatedLogData = {
         ...originalLog,
         title: this.newTitle().trim(),
@@ -195,17 +206,20 @@ export class LogManagement implements OnInit {
         error: (err) => console.error('更新失敗：', err),
       });
     } else {
+      // 💡 新增時寫入作者資訊
       const newLogData = {
         title: this.newTitle().trim(),
         category: this.newCategory(),
         hours: Number(this.newHours()) || 0,
         content: this.newContent().trim(),
         date: this.todayDate,
+        username: currentUser?.username, // 寫入帳號
+        authorName: currentUser?.name    // 寫入名稱
       };
 
       this.logService.addLog(newLogData).subscribe({
         next: () => {
-          this.toastMessage.set('🎉 成功新增工作日誌（Gemini AI 摘要已同步生成）！');
+          this.toastMessage.set('🎉 成功新增工作日誌！');
           this.cancelEdit();
           setTimeout(() => this.toastMessage.set(''), 3000);
         },
@@ -240,13 +254,11 @@ export class LogManagement implements OnInit {
 
   startEdit(log: any) {
     const logDate = this.getLogDate(log);
-
     if (logDate !== this.todayDate) {
       this.warningMessage.set('⚠️ 僅能編輯當日的工作日誌，歷史紀錄無法修改！');
       this.showWarningModal.set(true);
       return;
     }
-
     this.viewMode.set('today');
     this.editingLogId.set(log.id);
     this.newTitle.set(log.title);
@@ -254,7 +266,6 @@ export class LogManagement implements OnInit {
     this.newHours.set(log.hours);
     this.newContent.set(log.content);
     this.showErrors.set(false);
-
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -267,22 +278,13 @@ export class LogManagement implements OnInit {
     this.showErrors.set(false);
   }
 
-  totalHours = computed(() =>
-    this.filteredLogs().reduce((sum, log) => sum + (Number(log.hours) || 0), 0),
-  );
-
+  totalHours = computed(() => this.filteredLogs().reduce((sum, log) => sum + (Number(log.hours) || 0), 0));
   totalLogsCount = computed(() => this.filteredLogs().length);
-
-  devCategoryHours = computed(() =>
-    this.filteredLogs()
-      .filter((log) => log.category === '開發')
-      .reduce((sum, log) => sum + (Number(log.hours) || 0), 0),
-  );
+  devCategoryHours = computed(() => this.filteredLogs().filter((log) => log.category === '開發').reduce((sum, log) => sum + (Number(log.hours) || 0), 0));
 
   filterStatusText = computed(() => {
     const start = this.startDateFilter();
     const end = this.endDateFilter();
-
     if (start && end) return `目前顯示：${start} ～ ${end}`;
     if (start) return `目前顯示：${start} 之後`;
     if (end) return `目前顯示：${end} 之前`;

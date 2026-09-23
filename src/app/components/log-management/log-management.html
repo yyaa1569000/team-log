@@ -141,10 +141,21 @@
     <div class="filter-bar">
       <input
         type="text"
-        placeholder="🔍 搜尋標題或內容..."
+        placeholder="🔍 搜尋標題、內容或作者..."
         [value]="searchQuery()"
         (input)="searchQuery.set($any($event.target).value)"
       />
+
+      <!-- 💡 管理員專屬功能：過濾特定成員 -->
+      @if (authService.currentUser()?.role === 'ADMIN') {
+        <select [value]="selectedUser()" (change)="selectedUser.set($any($event.target).value)">
+          <option value="全部">👥 所有成員</option>
+          @for (user of uniqueUsers(); track user) {
+            <option [value]="user">👤 {{ user }}</option>
+          }
+        </select>
+      }
+
       <select
         [value]="selectedCategory()"
         (change)="selectedCategory.set($any($event.target).value)"
@@ -164,9 +175,10 @@
           <div class="log-card">
             <div class="log-header">
               <div class="log-meta">
+                <!-- 💡 顯示這是誰寫的 -->
+                <span class="author-badge">👤 {{ log.authorName || '未知' }}</span>
                 <span class="category-badge">{{ log.category }}</span>
                 <span class="hours-badge">⏱️ {{ log.hours }} 小時</span>
-                <!-- 💡 顯示日期並帶上圖示 -->
                 <span class="log-date">📅 {{ getLogDate(log) }}</span>
               </div>
               <div class="log-actions">
@@ -194,24 +206,36 @@
       </div>
       <!-- 💡 補上這裡：分頁控制列 (只有資料超過 10 筆才顯示) -->
       @if (filteredLogs().length > pageSize()) {
-        <div class="pagination-bar" style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 20px;">
-          <button 
-            (click)="goToPage(currentPage() - 1)" 
+        <div
+          class="pagination-bar"
+          style="
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-top: 20px;
+          "
+        >
+          <button
+            (click)="goToPage(currentPage() - 1)"
             [disabled]="currentPage() === 1"
-            style="padding: 6px 12px; cursor: pointer;"
-            [style.opacity]="currentPage() === 1 ? '0.5' : '1'">
+            style="padding: 6px 12px; cursor: pointer"
+            [style.opacity]="currentPage() === 1 ? '0.5' : '1'"
+          >
             上一頁
           </button>
-      
-          <span style="font-size: 14px; color: #555;">
-            第 {{ Math.min(currentPage(), totalPages()) }} / {{ totalPages() }} 頁 （共 {{ filteredLogs().length }} 筆）
+
+          <span style="font-size: 14px; color: #555">
+            第 {{ Math.min(currentPage(), totalPages()) }} / {{ totalPages() }} 頁 （共
+            {{ filteredLogs().length }} 筆）
           </span>
-      
-          <button 
-            (click)="goToPage(currentPage() + 1)" 
+
+          <button
+            (click)="goToPage(currentPage() + 1)"
             [disabled]="currentPage() === totalPages()"
-            style="padding: 6px 12px; cursor: pointer;"
-            [style.opacity]="currentPage() === totalPages() ? '0.5' : '1'">
+            style="padding: 6px 12px; cursor: pointer"
+            [style.opacity]="currentPage() === totalPages() ? '0.5' : '1'"
+          >
             下一頁
           </button>
         </div>
