@@ -508,3 +508,101 @@
   color: #1e293b;
   font-weight: 600;
 }
+
+/* ==========================================
+   💡 新增功能：AI 提交 Loading 與多重選取樣式
+   ========================================== */
+
+/* 提交按鈕防呆與 Loading 狀態 */
+.btn-submit:disabled {
+  background-color: #94a3b8;
+  cursor: not-allowed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 批次操作列 */
+.batch-action-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f8fafc;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.batch-left, .batch-right {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-batch-sub {
+  background: white;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-batch-sub:hover:not(:disabled) { background: #f1f5f9; }
+.btn-batch-sub:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-batch-delete {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.btn-batch-delete:hover:not(:disabled) { background: #fee2e2; }
+.btn-batch-delete:disabled { opacity: 0.5; cursor: not-allowed; background: transparent; border-color: #cbd5e1; color: #94a3b8; }
+
+.btn-batch-delete-all {
+  background: #dc2626;
+  border: none;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.btn-batch-delete-all:hover { background: #b91c1c; }
+
+/* 卡片勾選 Checkbox 與選取高亮狀態 */
+.log-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #3182ce;
+}
+
+.log-card.is-selected {
+  border-color: #93c5fd;
+  background-color: #eff6ff;
+  box-shadow: 0 0 0 1px #3b82f6;
+}

@@ -120,14 +120,17 @@
       </div>
 
       <div class="form-actions" style="display: flex; gap: 10px">
-        <!-- 只有在編輯模式下，才會顯示「取消編輯」按鈕 -->
         @if (editingLogId()) {
           <button class="btn-cancel-edit" (click)="cancelEdit()">取消編輯</button>
         }
 
-        <!-- 共用按鈕：編輯時顯示「儲存變更」，平時顯示「提交日誌」 -->
-        <button class="btn-submit" (click)="submitLog()">
-          {{ editingLogId() ? '儲存變更' : '提交日誌' }}
+        <!-- 💡 提交按鈕：加入 Loading 狀態判斷與 spinner 動畫 -->
+        <button class="btn-submit" (click)="submitLog()" [disabled]="isSubmitting()">
+          @if (isSubmitting()) {
+            <span class="spinner"></span> 🧠 AI 智慧摘要生成中... (約 5~10 秒，請勿關閉視窗)
+          } @else {
+            {{ editingLogId() ? '儲存變更' : '提交日誌' }}
+          }
         </button>
       </div>
     </div>
@@ -146,7 +149,6 @@
         (input)="searchQuery.set($any($event.target).value)"
       />
 
-      <!-- 💡 管理員專屬功能：過濾特定成員 -->
       @if (authService.currentUser()?.role === 'ADMIN') {
         <select [value]="selectedUser()" (change)="selectedUser.set($any($event.target).value)">
           <option value="全部">👥 所有成員</option>
@@ -168,14 +170,49 @@
       </select>
     </div>
 
+    <!-- 💡 批次操作工具列 (有資料才顯示) -->
+    @if (filteredLogs().length > 0) {
+      <div class="batch-action-bar">
+        <div class="batch-left">
+          <button class="btn-batch-sub" (click)="selectAllCurrentPage()">☑️ 全選本頁</button>
+          <button
+            class="btn-batch-sub"
+            (click)="clearSelection()"
+            [disabled]="selectedLogIds().size === 0"
+          >
+            取消選取
+          </button>
+        </div>
+        <div class="batch-right">
+          <button
+            class="btn-batch-delete"
+            (click)="openBatchDeleteModal()"
+            [disabled]="selectedLogIds().size === 0"
+          >
+            🗑️ 刪除選取 ({{ selectedLogIds().size }})
+          </button>
+          <button class="btn-batch-delete-all" (click)="openDeleteAllModal()">
+            🚨 刪除全部 ({{ filteredLogs().length }})
+          </button>
+        </div>
+      </div>
+    }
+
     <!-- 列表展示 -->
     @if (filteredLogs().length > 0) {
       <div class="log-grid">
         @for (log of paginatedLogs(); track log.id) {
-          <div class="log-card">
+          <!-- 💡 卡片加上 is-selected 樣式判斷 -->
+          <div class="log-card" [class.is-selected]="selectedLogIds().has(log.id)">
             <div class="log-header">
               <div class="log-meta">
-                <!-- 💡 顯示這是誰寫的 -->
+                <!-- 💡 卡片標題旁加入 Checkbox -->
+                <input
+                  type="checkbox"
+                  class="log-checkbox"
+                  [checked]="selectedLogIds().has(log.id)"
+                  (change)="toggleSelection(log.id)"
+                />
                 <span class="author-badge">👤 {{ log.authorName || '未知' }}</span>
                 <span class="category-badge">{{ log.category }}</span>
                 <span class="hours-badge">⏱️ {{ log.hours }} 小時</span>
@@ -191,7 +228,6 @@
             <h4>{{ log.title }}</h4>
             <p>{{ log.content }}</p>
 
-            <!-- 💡 這裡安全地插入了 AI 摘要，且沒有改變你原有的外層結構 -->
             @if ($any(log).aiSummary) {
               <div class="ai-summary-box">
                 <div class="ai-header">
@@ -204,7 +240,7 @@
           </div>
         }
       </div>
-      <!-- 💡 補上這裡：分頁控制列 (只有資料超過 10 筆才顯示) -->
+
       @if (filteredLogs().length > pageSize()) {
         <div
           class="pagination-bar"
@@ -247,11 +283,11 @@
     }
   </div>
 
-  <!-- 刪除確認 Modal -->
+  <!-- 💡 刪除確認 Modal (綁定動態變數) -->
   <app-confirm-modal
     [isOpen]="showDeleteModal()"
-    title="確認刪除這筆日誌？"
-    message="刪除後資料將無法復原，您確定要繼續嗎？"
+    [title]="deleteModalTitle()"
+    [message]="deleteModalMessage()"
     type="danger"
     confirmText="確認刪除"
     (confirmed)="handleConfirmDelete()"
