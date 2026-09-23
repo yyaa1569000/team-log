@@ -5,9 +5,11 @@ import { finalize } from 'rxjs/operators';
 
 export const loadingInterceptor: HttpInterceptorFn = (req, next) => {
   const loadingService = inject(LoadingService);
-  loadingService.show(); // 發送請求時顯示
+  
+  // 呼叫共用 show，但會被 Service 的防呆保護住 AI 文字
+  loadingService.show();
 
   return next(req).pipe(
-    finalize(() => loadingService.hide()) // 請求結束時隱藏
+    finalize(() => loadingService.hide())
   );
 };

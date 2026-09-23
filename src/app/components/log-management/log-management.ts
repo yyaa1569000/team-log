@@ -17,7 +17,7 @@ import { LoadingService } from '../../loading.service';
 export class LogManagement implements OnInit {
   logService = inject(LogService);
   authService = inject(AuthService);
-  loadingService = inject(LoadingService); // 💡 注入 LoadingService
+  loadingService = inject(LoadingService);
 
   newTitle = signal('');
   newCategory = signal('開發');
@@ -229,8 +229,8 @@ export class LogManagement implements OnInit {
     }
 
     this.isSubmitting.set(true);
-    // 💡 呼叫 API 前，手動開啟 Loading 並塞入自訂文字，這樣 Interceptor 就不會蓋掉它！
-    this.loadingService.show('🧠 AI 智慧摘要生成中... (約 5~10 秒，請勿關閉視窗)');
+    // 💡 呼叫 API 前，手動開啟 Loading 並塞入自訂 AI 提示文字
+    this.loadingService.show('🧠 AI 智慧摘要生成中... (約 5~30 秒，請勿關閉視窗)');
 
     const editId = this.editingLogId();
     const currentUser = this.authService.currentUser();
