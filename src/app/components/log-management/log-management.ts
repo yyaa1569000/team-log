@@ -26,10 +26,9 @@ export class LogManagement implements OnInit {
   showErrors = signal(false);
   toastMessage = signal('');
 
-  // AI 提交時的 Loading 狀態 (控制按鈕用)
   isSubmitting = signal(false);
+  isGeneratingSummary = signal(false); // 💡 新增：獨立控制 AI 總結 Loading 狀態
 
-  // 批次刪除狀態管理
   selectedLogIds = signal<Set<number>>(new Set());
   deleteMode = signal<'single' | 'batch' | 'all' | null>(null);
 
@@ -40,7 +39,9 @@ export class LogManagement implements OnInit {
   showDeleteModal = signal(false);
   deletingLogId = signal<number | null>(null);
 
-  // 動態計算刪除 Modal 的標題與訊息
+  // 💡 新增：儲存產生的 AI 總結報告
+  dailyAiSummary = signal<string | null>(null);
+
   deleteModalTitle = computed(() => {
     const mode = this.deleteMode();
     if (mode === 'batch') return `確認刪除這 ${this.selectedLogIds().size} 筆日誌？`;
@@ -78,11 +79,18 @@ export class LogManagement implements OnInit {
     return [...new Set(users)];
   });
 
-  // 攔截瀏覽器的重新整理與關閉事件 (防止 AI 執行中斷)
+  // 💡 防呆：如果只有選「特定單一日期」，才允許一鍵總結該日
+  isSingleDateSelected = computed(() => {
+    if (this.viewMode() === 'today') return true;
+    const start = this.startDateFilter();
+    const end = this.endDateFilter();
+    return start && end && start === end;
+  });
+
   @HostListener('window:beforeunload', ['$event'])
   unloadNotification($event: any) {
-    if (this.isSubmitting()) {
-      $event.returnValue = 'AI 正在生成摘要，確定要離開嗎？';
+    if (this.isSubmitting() || this.isGeneratingSummary()) {
+      $event.returnValue = '正在與伺服器連線中，確定要離開嗎？';
     }
   }
 
@@ -102,6 +110,7 @@ export class LogManagement implements OnInit {
     }
     this.startDateFilter.set(selectedDate);
     if (!currentEnd) this.endDateFilter.set(selectedDate);
+    this.dailyAiSummary.set(null); // 切換日期時清空舊總結
   }
 
   onEndDateChange(event: any) {
@@ -115,6 +124,7 @@ export class LogManagement implements OnInit {
     } else {
       this.endDateFilter.set(selectedEndDate);
     }
+    this.dailyAiSummary.set(null); // 切換日期時清空舊總結
   }
 
   closeWarningModal() {
@@ -222,6 +232,7 @@ export class LogManagement implements OnInit {
     this.selectedLogIds.set(new Set());
   }
 
+  // 💡 移除原本綁死在提交日誌的 AI 呼叫
   submitLog() {
     if (!this.newTitle().trim() || !this.newContent().trim() || !this.newHours()) {
       this.showErrors.set(true);
@@ -229,8 +240,7 @@ export class LogManagement implements OnInit {
     }
 
     this.isSubmitting.set(true);
-    // 💡 呼叫 API 前，手動開啟 Loading 並塞入自訂 AI 提示文字
-    this.loadingService.show('🧠 AI 智慧摘要生成中... (約 5~30 秒，請勿關閉視窗)');
+    this.loadingService.show('儲存中...'); // 改為一般儲存提示
 
     const editId = this.editingLogId();
     const currentUser = this.authService.currentUser();
@@ -280,6 +290,60 @@ export class LogManagement implements OnInit {
           this.isSubmitting.set(false);
           console.error('寫入失敗：', err);
         },
+      });
+    }
+  }
+
+  // 💡 新增：生成勾選項目 / 單日總結
+  generateSummaryFromSelection() {
+    let idsToSummarize: number[] = [];
+
+    // 如果有勾選，以勾選為主
+    if (this.selectedLogIds().size > 0) {
+      idsToSummarize = Array.from(this.selectedLogIds());
+    } 
+    // 沒勾選但目前停留在單一日期，自動全包該日
+    else if (this.isSingleDateSelected() && this.filteredLogs().length > 0) {
+       // 防呆：確認是否要覆蓋舊摘要
+      if (this.dailyAiSummary() && !confirm('要重新生成一份新的總結覆蓋原有的嗎？')) {
+        return;
+      }
+      idsToSummarize = this.filteredLogs().map(l => l.id);
+    } else {
+      this.warningMessage.set('請先勾選要總結的日誌，或確保日期篩選範圍為單一日！');
+      this.showWarningModal.set(true);
+      return;
+    }
+
+    this.isGeneratingSummary.set(true);
+    this.loadingService.show('🧠 AI 智慧總結生成中... (約 5~15 秒，請勿關閉視窗)');
+
+    // 呼叫後端 API
+    this.logService.generateBatchSummary(idsToSummarize).subscribe({
+      next: (res) => {
+        this.dailyAiSummary.set(res.summary);
+        this.isGeneratingSummary.set(false);
+        this.clearSelection(); // 生成完畢後清空勾選
+        window.scrollTo({ top: 0, behavior: 'smooth' }); // 自動捲動到最上面看總結
+        this.toastMessage.set('✨ AI 總結生成完畢！');
+        setTimeout(() => this.toastMessage.set(''), 3000);
+      },
+      error: (err) => {
+        this.isGeneratingSummary.set(false);
+        console.error('產生摘要失敗：', err);
+        this.warningMessage.set('產生摘要失敗，請稍後再試。');
+        this.showWarningModal.set(true);
+      }
+    });
+  }
+
+  // 💡 新增：一鍵複製總結到剪貼簿
+  copySummary() {
+    const summary = this.dailyAiSummary();
+    if (summary) {
+      navigator.clipboard.writeText(summary).then(() => {
+        this.toastMessage.set('📋 總結已複製到剪貼簿！');
+        setTimeout(() => this.toastMessage.set(''), 2000);
       });
     }
   }

@@ -123,11 +123,10 @@
         @if (editingLogId()) {
           <button class="btn-cancel-edit" (click)="cancelEdit()">取消編輯</button>
         }
-
-        <!-- 💡 提交按鈕：加入 Loading 狀態判斷與 spinner 動畫 -->
+        <!-- 💡 改回一般的儲存按鈕 -->
         <button class="btn-submit" (click)="submitLog()" [disabled]="isSubmitting()">
           @if (isSubmitting()) {
-            <span class="spinner"></span> 🧠 AI 智慧摘要生成中... (約 5~30 秒，請勿關閉視窗)
+            <span class="spinner"></span> 儲存中...
           } @else {
             {{ editingLogId() ? '儲存變更' : '提交日誌' }}
           }
@@ -170,7 +169,7 @@
       </select>
     </div>
 
-    <!-- 💡 批次操作工具列 (有資料才顯示) -->
+    <!-- 💡 批次操作工具列 (新增 AI 生成按鈕) -->
     @if (filteredLogs().length > 0) {
       <div class="batch-action-bar">
         <div class="batch-left">
@@ -181,6 +180,21 @@
             [disabled]="selectedLogIds().size === 0"
           >
             取消選取
+          </button>
+          
+          <!-- 💡 黃金位置的 AI 生成按鈕 -->
+          <button 
+            class="btn-generate-ai" 
+            (click)="generateSummaryFromSelection()"
+            [disabled]="isGeneratingSummary()"
+          >
+            @if (selectedLogIds().size > 0) {
+              ✨ 生成選取摘要 ({{selectedLogIds().size}}筆)
+            } @else if (isSingleDateSelected()) {
+              ✨ 一鍵總結本日工作
+            } @else {
+              請先勾選項目
+            }
           </button>
         </div>
         <div class="batch-right">
@@ -198,15 +212,27 @@
       </div>
     }
 
+    <!-- 💡 顯示生成的單日大總結 -->
+    @if (dailyAiSummary()) {
+      <div class="global-ai-summary">
+        <div class="ai-header-wrapper">
+          <div class="ai-header">
+            <span class="ai-icon">✨</span>
+            <span class="ai-title">Gemini 工作總結報告</span>
+          </div>
+          <button class="btn-copy" (click)="copySummary()" title="複製內容">📋 複製</button>
+        </div>
+        <p class="ai-content">{{ dailyAiSummary() }}</p>
+      </div>
+    }
+
     <!-- 列表展示 -->
     @if (filteredLogs().length > 0) {
       <div class="log-grid">
         @for (log of paginatedLogs(); track log.id) {
-          <!-- 💡 卡片加上 is-selected 樣式判斷 -->
           <div class="log-card" [class.is-selected]="selectedLogIds().has(log.id)">
             <div class="log-header">
               <div class="log-meta">
-                <!-- 💡 卡片標題旁加入 Checkbox -->
                 <input
                   type="checkbox"
                   class="log-checkbox"
@@ -227,53 +253,16 @@
             </div>
             <h4>{{ log.title }}</h4>
             <p>{{ log.content }}</p>
-
-            @if ($any(log).aiSummary) {
-              <div class="ai-summary-box">
-                <div class="ai-header">
-                  <span class="ai-icon">✨</span>
-                  <span class="ai-title">Gemini AI 智慧摘要</span>
-                </div>
-                <p class="ai-content">{{ $any(log).aiSummary }}</p>
-              </div>
-            }
+            <!-- 💡 移除了原本每張卡片底下的獨立 AI 摘要區塊 -->
           </div>
         }
       </div>
 
       @if (filteredLogs().length > pageSize()) {
-        <div
-          class="pagination-bar"
-          style="
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
-            margin-top: 20px;
-          "
-        >
-          <button
-            (click)="goToPage(currentPage() - 1)"
-            [disabled]="currentPage() === 1"
-            style="padding: 6px 12px; cursor: pointer"
-            [style.opacity]="currentPage() === 1 ? '0.5' : '1'"
-          >
-            上一頁
-          </button>
-
-          <span style="font-size: 14px; color: #555">
-            第 {{ Math.min(currentPage(), totalPages()) }} / {{ totalPages() }} 頁 （共
-            {{ filteredLogs().length }} 筆）
-          </span>
-
-          <button
-            (click)="goToPage(currentPage() + 1)"
-            [disabled]="currentPage() === totalPages()"
-            style="padding: 6px 12px; cursor: pointer"
-            [style.opacity]="currentPage() === totalPages() ? '0.5' : '1'"
-          >
-            下一頁
-          </button>
+        <div class="pagination-bar" style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 20px;">
+          <button (click)="goToPage(currentPage() - 1)" [disabled]="currentPage() === 1" style="padding: 6px 12px; cursor: pointer" [style.opacity]="currentPage() === 1 ? '0.5' : '1'">上一頁</button>
+          <span style="font-size: 14px; color: #555">第 {{ Math.min(currentPage(), totalPages()) }} / {{ totalPages() }} 頁 （共 {{ filteredLogs().length }} 筆）</span>
+          <button (click)="goToPage(currentPage() + 1)" [disabled]="currentPage() === totalPages()" style="padding: 6px 12px; cursor: pointer" [style.opacity]="currentPage() === totalPages() ? '0.5' : '1'">下一頁</button>
         </div>
       }
     } @else {
@@ -283,7 +272,7 @@
     }
   </div>
 
-  <!-- 💡 刪除確認 Modal (綁定動態變數) -->
+  <!-- 刪除確認 Modal -->
   <app-confirm-modal
     [isOpen]="showDeleteModal()"
     [title]="deleteModalTitle()"

@@ -64,5 +64,10 @@ export class LogService {
       }),
     );
   }
+
+  // 新增：呼叫後端產生批次總結 API
+  generateBatchSummary(logIds: number[]) {
+    return this.http.post<{ summary: string }>(`${this.apiUrl}/generate-summary`, logIds);
+  }
   
 }
