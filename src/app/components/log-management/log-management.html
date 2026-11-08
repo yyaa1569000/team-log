@@ -1,12 +1,13 @@
 <div class="log-manager">
   <h2>📝 工作日誌管理</h2>
 
-  <!-- 👉 加入 id="tour-tabs" -->
-  <div class="view-tabs" id="tour-tabs">
-    <button class="tab-btn" [class.active]="viewMode() === 'today'" (click)="viewMode.set('today')">
+  <div class="view-tabs">
+    <!-- 👉 步驟1 標籤 -->
+    <button id="tour-tab-today" class="tab-btn" [class.active]="viewMode() === 'today'" (click)="viewMode.set('today')">
       📅 今日工作填寫 ({{ todayDate }})
     </button>
-    <button class="tab-btn" [class.active]="viewMode() === 'history'" (click)="viewMode.set('history')">
+    <!-- 👉 步驟2 標籤 -->
+    <button id="tour-tab-history" class="tab-btn" [class.active]="viewMode() === 'history'" (click)="viewMode.set('history')">
       📚 歷史紀錄查詢
     </button>
   </div>
@@ -21,8 +22,7 @@
     </div>
   }
 
-  <!-- 👉 加入 id="tour-stats" -->
-  <div class="dashboard-stats" id="tour-stats">
+  <div class="dashboard-stats">
     <div class="stat-card">
       <div class="stat-icon">📊</div>
       <div class="stat-info">
@@ -51,8 +51,7 @@
   }
 
   @if (viewMode() === 'today') {
-    <!-- 👉 加入 id="tour-form" -->
-    <div class="log-form-card" id="tour-form">
+    <div class="log-form-card">
       <h3>{{ editingLogId() ? '編輯工作日誌' : '新增工作日誌' }}</h3>
 
       <div class="form-group">
@@ -85,7 +84,8 @@
 
       <div class="form-actions" style="display: flex; gap: 10px">
         @if (editingLogId()) { <button class="btn-cancel-edit" (click)="cancelEdit()">取消編輯</button> }
-        <button class="btn-submit" (click)="submitLog()" [disabled]="isSubmitting()">
+        <!-- 👉 步驟3 標籤 -->
+        <button id="tour-submit" class="btn-submit" (click)="submitLog()" [disabled]="isSubmitting()">
           @if (isSubmitting()) { <span class="spinner"></span> 儲存中... } @else { {{ editingLogId() ? '儲存變更' : '提交日誌' }} }
         </button>
       </div>
@@ -95,8 +95,7 @@
   <div class="log-list-section">
     <h3>團隊日誌列表</h3>
 
-    <!-- 👉 加入 id="tour-filter" -->
-    <div class="filter-bar" id="tour-filter">
+    <div class="filter-bar">
       <input type="text" placeholder="🔍 搜尋標題、內容或作者..." [value]="searchQuery()" (input)="searchQuery.set($any($event.target).value)" />
       @if (authService.currentUser()?.role === 'ADMIN') {
         <select [value]="selectedUser()" (change)="selectedUser.set($any($event.target).value)">
@@ -113,21 +112,21 @@
       </select>
     </div>
 
-    @if (filteredLogs().length > 0) {
-      <div class="batch-action-bar">
-        <div class="batch-left">
-          <button class="btn-batch-sub" (click)="selectAllCurrentPage()">☑️ 全選本頁</button>
-          <button class="btn-batch-sub" (click)="clearSelection()" [disabled]="selectedLogIds().size === 0">取消選取</button>
-          <button class="btn-generate-ai" (click)="generateSummaryFromSelection()" [disabled]="isGeneratingSummary()">
-            @if (selectedLogIds().size > 0) { ✨ 生成選取摘要 ({{selectedLogIds().size}}筆) } @else if (isSingleDateSelected()) { ✨ 一鍵總結本日工作 } @else { 請先勾選項目 }
-          </button>
-        </div>
-        <div class="batch-right">
-          <button class="btn-batch-delete" (click)="openBatchDeleteModal()" [disabled]="selectedLogIds().size === 0">🗑️ 刪除選取 ({{ selectedLogIds().size }})</button>
-          <button class="btn-batch-delete-all" (click)="openDeleteAllModal()">🚨 刪除全部 ({{ filteredLogs().length }})</button>
-        </div>
+    <!-- 👉 工具列保持顯示，這樣沒有日誌時教學也不會壞掉 -->
+    <div class="batch-action-bar">
+      <div class="batch-left">
+        <button class="btn-batch-sub" (click)="selectAllCurrentPage()" [disabled]="filteredLogs().length === 0">☑️ 全選本頁</button>
+        <button class="btn-batch-sub" (click)="clearSelection()" [disabled]="selectedLogIds().size === 0">取消選取</button>
+        <!-- 👉 步驟4 標籤 -->
+        <button id="tour-batch" class="btn-generate-ai" (click)="generateSummaryFromSelection()" [disabled]="isGeneratingSummary() || filteredLogs().length === 0">
+          @if (selectedLogIds().size > 0) { ✨ 生成選取摘要 ({{selectedLogIds().size}}筆) } @else if (isSingleDateSelected()) { ✨ 一鍵總結本日工作 } @else { 請先勾選項目 }
+        </button>
       </div>
-    }
+      <div class="batch-right">
+        <button class="btn-batch-delete" (click)="openBatchDeleteModal()" [disabled]="selectedLogIds().size === 0">🗑️ 刪除選取 ({{ selectedLogIds().size }})</button>
+        <button class="btn-batch-delete-all" (click)="openDeleteAllModal()" [disabled]="filteredLogs().length === 0">🚨 刪除全部 ({{ filteredLogs().length }})</button>
+      </div>
+    </div>
 
     @if (dailyAiSummary()) {
       <div class="global-ai-summary">
