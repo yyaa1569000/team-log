@@ -43,38 +43,40 @@ export class LogManagement implements OnInit {
 
   dailyAiSummary = signal<string | null>(null);
 
-  // 👇 完全客製化的 4 步驟導覽 (自帶 action 自動切換畫面)
+  // 導覽步驟定義
   tourSteps = [
     { 
       id: 'tour-tab-today', 
-      title: '1. 今日工作填寫', 
+      title: '✨ 1. 今日工作填寫', 
       content: '點擊此頁籤，可以切換到「今日模式」，在這裡填寫您今天最新的工作日誌。', 
       position: 'bottom',
       action: () => this.viewMode.set('today') 
     },
     { 
       id: 'tour-tab-history', 
-      title: '2. 歷史紀錄查詢', 
+      title: '✨ 2. 歷史紀錄查詢', 
       content: '點擊此頁籤，可以切換到「歷史模式」，利用日期篩選器來查詢過去所有的歷史紀錄。', 
       position: 'bottom',
       action: () => this.viewMode.set('history') 
     },
     { 
       id: 'tour-submit', 
-      title: '3. 提交日誌', 
+      title: '✨ 3. 提交日誌', 
       content: '在今日模式下填寫完標題、工時與內容後，點擊「提交日誌」按鈕即可送出。', 
       position: 'top',
       action: () => this.viewMode.set('today') 
     },
     { 
       id: 'tour-batch', 
-      title: '4. AI 智慧總結', 
+      title: '✨ 4. AI 智慧總結', 
       content: '【請先勾選項目】：想產生總結時，請先在下方列表勾選特定日誌（打勾），接著點擊此按鈕，AI 就會幫你把勾選的項目匯整成一份精美報告！', 
-      position: 'top', // 確保視窗在按鈕上方，箭頭朝下指
-      action: () => this.viewMode.set('today') // 切回今日模式，確保能看到下方工具列
+      position: 'top', 
+      action: () => this.viewMode.set('today') 
     }
   ];
+  
   currentTourStep = signal(0);
+  // 改為儲存 fixed 定位的座標
   tooltipPos = signal({ top: 0, left: 0 });
 
   deleteModalTitle = computed(() => {
@@ -122,19 +124,20 @@ export class LogManagement implements OnInit {
   });
 
   constructor() {
-    // 👇 監聽導覽狀態，並在切換時自動執行 action (如切換 tab)
     effect(() => {
       if (this.tutorialService.isActive()) {
         const step = this.tourSteps[this.currentTourStep()];
-        if (step.action) step.action(); // 執行預設動作，確保畫面一致
-        setTimeout(() => this.updateTourPosition(), 150); 
+        if (step.action) step.action(); 
+        
+        // 延遲稍微拉長到 100ms，確保 Angular 的視圖更新與 CSS 動畫完全結束
+        setTimeout(() => this.updateTourPosition(), 100); 
       } else {
         this.clearHighlight();
       }
     });
   }
 
-updateTourPosition() {
+  updateTourPosition() {
     this.clearHighlight();
     const step = this.tourSteps[this.currentTourStep()];
     const targetEl = document.getElementById(step.id);
@@ -143,42 +146,35 @@ updateTourPosition() {
       targetEl.classList.add('tour-highlight-active');
       targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-      // 稍微延遲一下，確保畫面滾動完畢且高光效果加上後再計算座標
+      // 等待捲動結束
       setTimeout(() => {
-        const rect = targetEl.getBoundingClientRect();
-        const scrollY = window.scrollY;
-        const scrollX = window.scrollX;
+        // 取得目標元素相對於瀏覽器視窗 (Viewport) 的座標
+        const targetRect = targetEl.getBoundingClientRect();
         
-        // 抓取小視窗的 DOM 元素來動態取得實際寬高
         const tooltipEl = document.querySelector('.tour-tooltip') as HTMLElement;
-        const tooltipWidth = tooltipEl ? tooltipEl.offsetWidth : 300; // 預設 300px
-        const tooltipHeight = tooltipEl ? tooltipEl.offsetHeight : 200; // 預設 200px
+        const tooltipWidth = tooltipEl ? tooltipEl.offsetWidth : 300; 
+        const tooltipHeight = tooltipEl ? tooltipEl.offsetHeight : 200; 
 
-        // 計算目標元素的中心點 X 座標
-        const targetCenterX = rect.left + scrollX + (rect.width / 2);
-        
-        // 讓小視窗的中心點對齊目標元素的中心點
+        // X軸置中：目標的視窗中心點 - 提示框的一半寬度
+        const targetCenterX = targetRect.left + (targetRect.width / 2);
         let left = targetCenterX - (tooltipWidth / 2);
         
-        // 防止小視窗超出螢幕左邊界
+        // 防止超出螢幕邊界
         if (left < 10) left = 10;
-        
-        // 防止小視窗超出螢幕右邊界
         const maxLeft = window.innerWidth - tooltipWidth - 10;
         if (left > maxLeft) left = maxLeft;
 
         let top = 0;
-
         if (step.position === 'bottom') {
-          // 在目標下方：目標的底部 Y 座標 + 向下偏移 15px (給箭頭空間)
-          top = rect.bottom + scrollY + 15; 
+          // 在目標下方：目標底部 Y 座標 + 15px 緩衝區
+          top = targetRect.bottom + 15; 
         } else if (step.position === 'top') {
-          // 在目標上方：目標的頂部 Y 座標 - 視窗高度 - 向上偏移 15px (給箭頭空間)
-          top = rect.top + scrollY - tooltipHeight - 15; 
+          // 在目標上方：目標頂部 Y 座標 - 提示框高度 - 15px 緩衝區
+          top = targetRect.top - tooltipHeight - 15; 
         }
 
         this.tooltipPos.set({ top, left });
-      }, 50); // 50ms 延遲
+      }, 500); // 給 scrollIntoView 充足的時間滾動
     }
   }
 
@@ -204,10 +200,11 @@ updateTourPosition() {
   }
 
   @HostListener('window:resize')
-  onResize() {
-    this.updatePageSize();
+  @HostListener('window:scroll') // 加上監聽滾動事件，滾動時即時更新位置
+  onResizeOrScroll() {
     if (this.tutorialService.isActive()) {
-        this.updateTourPosition();
+      // 降低更新頻率避免效能問題
+       this.updateTourPosition();
     }
   }
 
@@ -215,7 +212,6 @@ updateTourPosition() {
     this.logService.fetchLogs();
     this.updatePageSize();
 
-    // 👇 只要總開關是開的，每次重新進來都會自動開始教學
     if (this.tutorialService.isTutorialEnabled()) {
       setTimeout(() => {
         this.currentTourStep.set(0);

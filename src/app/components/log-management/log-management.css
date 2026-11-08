@@ -718,7 +718,6 @@
 .tour-highlight-active {
   position: relative !important;
   z-index: 9999 !important;
-  /* 👇 刪除了強制白底，只保留藍色發光外框 */
   box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.4), 0 0 15px rgba(59, 130, 246, 0.6) !important;
   border-radius: 8px !important;
   transition: all 0.3s ease-in-out;
@@ -736,8 +735,9 @@
   cursor: pointer;
 }
 
+/* 👇 重點：改為 fixed 定位 */
 .tour-tooltip {
-  position: absolute;
+  position: fixed; 
   z-index: 10000;
   width: 300px;
   background: linear-gradient(145deg, #ffffff, #f3f4f6);
