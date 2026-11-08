@@ -32,7 +32,7 @@ export class TeamManagementComponent implements OnInit {
     { 
       id: 'tour-add-member', 
       title: '✨ 團隊成員管理', 
-      content: '點擊此按鈕可以新增團隊成員（如面試官或測試人員），系統會自動賦予預設密碼與一般成員權限。', 
+      content: '點擊此按鈕可以新增團隊成員，系統會自動賦予預設密碼與一般成員權限。', 
       position: 'bottom',
       action: () => {} 
     }

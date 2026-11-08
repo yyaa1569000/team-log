@@ -121,3 +121,39 @@
 .btn-primary:active {
   transform: scale(0.98);
 }
+
+/* ================= 導覽系統專用 CSS ================= */
+
+.tour-highlight-active {
+  position: relative !important;
+  z-index: 9999 !important;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.4), 0 0 15px rgba(59, 130, 246, 0.6) !important;
+  border-radius: 8px !important;
+  transition: all 0.3s ease-in-out;
+}
+
+.tour-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(2px);
+  z-index: 9998;
+  cursor: pointer;
+}
+
+/* 👇 重點：改為 fixed 定位 */
+.tour-tooltip {
+  position: fixed; 
+  z-index: 10000;
+  width: 300px;
+  background: linear-gradient(145deg, #ffffff, #f3f4f6);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+  color: #1f2937;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  animation: tourPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}

@@ -26,7 +26,8 @@
       </div>
 
       <div class="form-actions">
-        <button type="submit" class="btn-primary">儲存系統設定</button>
+        <!-- 👇 加上 id="tour-save-system" -->
+        <button id="tour-save-system" type="submit" class="btn-primary">儲存系統設定</button>
       </div>
     </form>
   </div>
@@ -81,8 +82,26 @@
       </div>
 
       <div class="form-actions">
-        <button type="submit" class="btn-primary">更新個人帳號密碼</button>
+        <!-- 👇 加上 id="tour-save-account" -->
+        <button id="tour-save-account" type="submit" class="btn-primary">更新個人帳號密碼</button>
       </div>
     </form>
   </div>
 </div>
+
+<!-- 👇 設定頁面的導覽小視窗 UI -->
+@if (tutorialService.isActive()) {
+  <div class="tour-backdrop" (click)="tutorialService.stopTutorial()"></div>
+  <div class="tour-tooltip" [style.top.px]="tooltipPos().top" [style.left.px]="tooltipPos().left" [class]="tourSteps[currentTourStep()].position">
+    <button class="tour-close-btn" (click)="tutorialService.stopTutorial()">✖</button>
+    <div class="tour-header">✨ {{ tourSteps[currentTourStep()].title }}</div>
+    <div class="tour-body">{{ tourSteps[currentTourStep()].content }}</div>
+    <div class="tour-footer">
+      <span class="tour-dots">
+        @for (step of tourSteps; track $index) { <span class="dot" [class.active]="$index === currentTourStep()"></span> }
+      </span>
+      <button class="tour-next-btn" (click)="nextTourStep()">{{ currentTourStep() === tourSteps.length - 1 ? '🎉 完成教學' : '下一步 ➔' }}</button>
+    </div>
+    <div class="tour-arrow"></div>
+  </div>
+}
