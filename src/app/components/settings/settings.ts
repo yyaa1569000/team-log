@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, effect } from '@angular/core';
+import { Component, OnInit, inject, signal, effect, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SettingsService, SystemSettings } from '../../services/settings';
@@ -72,9 +72,14 @@ export class Settings implements OnInit {
       }
     });
 
+    // 👇 就是這裡！加入了 this.currentTourStep() 的讀取，確保 Angular 會監聽步驟切換
     effect(() => {
       if (this.tutorialService.isActive()) {
-        setTimeout(() => this.updateTourPosition(), 50); 
+        const step = this.tourSteps[this.currentTourStep()]; // 👉 必須讀取，確保畫面連動
+        if (step.action) step.action(); 
+        
+        // 🚀 使用與工作日誌相同的「瞬間零延遲定位法」
+        setTimeout(() => this.updateTourPosition(), 30); 
       } else {
         this.clearHighlight();
       }
@@ -88,30 +93,30 @@ export class Settings implements OnInit {
     
     if (targetEl) {
       targetEl.classList.add('tour-highlight-active');
-      targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      
+      // 🚀 瞬間滾動置中，不卡頓
+      targetEl.scrollIntoView({ block: 'center' });
 
-      setTimeout(() => {
-        const targetRect = targetEl.getBoundingClientRect();
-        const tooltipEl = document.querySelector('.tour-tooltip') as HTMLElement;
-        const tooltipWidth = tooltipEl ? tooltipEl.offsetWidth : 300; 
-        const tooltipHeight = tooltipEl ? tooltipEl.offsetHeight : 200; 
+      const targetRect = targetEl.getBoundingClientRect();
+      const tooltipEl = document.querySelector('.tour-tooltip') as HTMLElement;
+      const tooltipWidth = tooltipEl ? tooltipEl.offsetWidth : 300; 
+      const tooltipHeight = tooltipEl ? tooltipEl.offsetHeight : 200; 
 
-        const targetCenterX = targetRect.left + (targetRect.width / 2);
-        let left = targetCenterX - (tooltipWidth / 2);
-        
-        if (left < 10) left = 10;
-        const maxLeft = window.innerWidth - tooltipWidth - 10;
-        if (left > maxLeft) left = maxLeft;
+      const targetCenterX = targetRect.left + (targetRect.width / 2);
+      let left = targetCenterX - (tooltipWidth / 2);
+      
+      if (left < 10) left = 10;
+      const maxLeft = window.innerWidth - tooltipWidth - 10;
+      if (left > maxLeft) left = maxLeft;
 
-        let top = 0;
-        if (step.position === 'bottom') {
-          top = targetRect.bottom + 15; 
-        } else if (step.position === 'top') {
-          top = targetRect.top - tooltipHeight - 15; 
-        }
+      let top = 0;
+      if (step.position === 'bottom') {
+        top = targetRect.bottom + 15; 
+      } else if (step.position === 'top') {
+        top = targetRect.top - tooltipHeight - 15; 
+      }
 
-        this.tooltipPos.set({ top, left });
-      }, 150);
+      this.tooltipPos.set({ top, left });
     }
   }
 
@@ -126,6 +131,13 @@ export class Settings implements OnInit {
       this.currentTourStep.set(this.currentTourStep() + 1);
     } else {
       this.tutorialService.stopTutorial();
+    }
+  }
+
+  @HostListener('window:resize')
+  onResize() {
+    if (this.tutorialService.isActive()) {
+       this.updateTourPosition();
     }
   }
 
