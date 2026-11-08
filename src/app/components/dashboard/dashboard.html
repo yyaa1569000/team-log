@@ -1,23 +1,17 @@
 <div class="dashboard-layout">
-  <!-- 1. 左側邊欄（絕對不能少！） -->
+  <!-- 1. 左側邊欄 -->
   <aside class="sidebar">
     <div class="sidebar-brand">
       <h2>{{ settingsService.settings().workspaceName }}</h2>
     </div>
 
     <nav class="sidebar-nav">
-      <a
-        routerLink="/dashboard"
-        routerLinkActive="active"
-        [routerLinkActiveOptions]="{ exact: true }"
-        >📊 總覽</a
-      >
+      <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">📊 總覽</a>
       <a routerLink="logs" routerLinkActive="active">📝 工作日誌</a>
       <a routerLink="team" routerLinkActive="active">👥 團隊成員</a>
       <a routerLink="settings" routerLinkActive="active">⚙️ 系統設定</a>
     </nav>
 
-    <!-- 底部資訊卡片 + 倒數計時器 + 登出按鈕 -->
     <div class="sidebar-footer">
       @if (authService.currentUser(); as user) {
         <div class="user-profile-card">
@@ -30,12 +24,9 @@
           </div>
         </div>
       }
-
-      <!-- 閒置倒數計時器 -->
       <div class="sidebar-idle-badge">
         ⏳ 閒置倒數：<span>{{ formattedIdleTime() }}</span>
       </div>
-
       <button class="btn-logout" (click)="logout()">🚪 登出系統</button>
     </div>
   </aside>
@@ -43,20 +34,26 @@
   <!-- 2. 右側主內容區 -->
   <main class="main-content">
     @if (isOverview) {
-      <!-- 總覽面板與統計卡片 -->
       <div class="overview-panel">
-        <div class="overview-header">
-          <h3>📊 系統總覽儀表板</h3>
-          <p class="subtitle">歡迎回來！以下是今日的系統即時數據統計。</p>
+        <div class="overview-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h3>📊 系統總覽儀表板</h3>
+            <p class="subtitle">歡迎回來！以下是今日的系統即時數據統計。</p>
+          </div>
+          
+          <!-- 👇 新增的高質感教學開關 -->
+          <div class="tutorial-switch-wrapper">
+            <span class="switch-label">💡 系統教學模式</span>
+            <label class="toggle-switch">
+              <input 
+                type="checkbox" 
+                [checked]="tutorialService.isTutorialEnabled()" 
+                (change)="tutorialService.toggleEnable($any($event.target).checked)"
+              >
+              <span class="slider"></span>
+            </label>
+          </div>
         </div>
-        <!-- 👇 新增的教學開關按鈕 -->
-          <button 
-            class="btn-tutorial-toggle" 
-            (click)="tutorialService.isActive.set(!tutorialService.isActive())"
-            style="padding: 8px 16px; border-radius: 8px; border: none; background: #3b82f6; color: white; cursor: pointer; font-weight: bold; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3); transition: all 0.2s;"
-          >
-            {{ tutorialService.isActive() ? '🛑 關閉系統導覽' : '💡 開啟系統導覽' }}
-          </button>
 
         <div class="stats-grid">
           <div class="stat-card">
@@ -66,7 +63,6 @@
               <span class="stat-value">{{ todayLogsCount() }} 篇</span>
             </div>
           </div>
-
           <div class="stat-card">
             <div class="stat-icon bg-green">👥</div>
             <div class="stat-info">
@@ -74,7 +70,6 @@
               <span class="stat-value">{{ dashboardService.stats().teamMemberCount }} 人</span>
             </div>
           </div>
-
           <div class="stat-card">
             <div class="stat-icon bg-purple">🟢</div>
             <div class="stat-info">
@@ -83,16 +78,13 @@
             </div>
           </div>
         </div>
-
       </div>
     } @else {
-      <!-- 子路由頁面 -->
       <router-outlet></router-outlet>
     }
   </main>
 </div>
 
-<!-- 🔒 閒置自動登出提示視窗 (使用共用 ConfirmModal) -->
 <app-confirm-modal
   [isOpen]="isAutoLogoutModalOpen()"
   title="安全性登出通知"
@@ -101,6 +93,6 @@
   [showCancel]="false"
   type="warning"
   (confirmed)="onConfirmAutoLogout()"
-  (cancelled)="onCancelAutoLogout()"
->
+  (cancelled)="onCancelAutoLogout()">
 </app-confirm-modal>
+
