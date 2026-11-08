@@ -43,7 +43,6 @@ export class LogManagement implements OnInit {
 
   dailyAiSummary = signal<string | null>(null);
 
-  // 導覽步驟定義
   tourSteps = [
     { 
       id: 'tour-tab-today', 
@@ -76,7 +75,6 @@ export class LogManagement implements OnInit {
   ];
   
   currentTourStep = signal(0);
-  // 改為儲存 fixed 定位的座標
   tooltipPos = signal({ top: 0, left: 0 });
 
   deleteModalTitle = computed(() => {
@@ -129,8 +127,8 @@ export class LogManagement implements OnInit {
         const step = this.tourSteps[this.currentTourStep()];
         if (step.action) step.action(); 
         
-        // 延遲稍微拉長到 100ms，確保 Angular 的視圖更新與 CSS 動畫完全結束
-        setTimeout(() => this.updateTourPosition(), 100); 
+        // 🚀 拔除長時間等待，只需要 30 毫秒讓 Angular 把畫面渲染出來即可瞬間定位
+        setTimeout(() => this.updateTourPosition(), 30); 
       } else {
         this.clearHighlight();
       }
@@ -144,37 +142,32 @@ export class LogManagement implements OnInit {
     
     if (targetEl) {
       targetEl.classList.add('tour-highlight-active');
-      targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      
+      // 🚀 拔除 behavior: 'smooth'，改為瞬間對齊，徹底消除捲動動畫造成的卡頓感
+      targetEl.scrollIntoView({ block: 'center' });
 
-      // 等待捲動結束
-      setTimeout(() => {
-        // 取得目標元素相對於瀏覽器視窗 (Viewport) 的座標
-        const targetRect = targetEl.getBoundingClientRect();
-        
-        const tooltipEl = document.querySelector('.tour-tooltip') as HTMLElement;
-        const tooltipWidth = tooltipEl ? tooltipEl.offsetWidth : 300; 
-        const tooltipHeight = tooltipEl ? tooltipEl.offsetHeight : 200; 
+      // 🚀 拔除 500ms 的 setTimeout，現在立刻、瞬間算出座標！
+      const targetRect = targetEl.getBoundingClientRect();
+      
+      const tooltipEl = document.querySelector('.tour-tooltip') as HTMLElement;
+      const tooltipWidth = tooltipEl ? tooltipEl.offsetWidth : 300; 
+      const tooltipHeight = tooltipEl ? tooltipEl.offsetHeight : 200; 
 
-        // X軸置中：目標的視窗中心點 - 提示框的一半寬度
-        const targetCenterX = targetRect.left + (targetRect.width / 2);
-        let left = targetCenterX - (tooltipWidth / 2);
-        
-        // 防止超出螢幕邊界
-        if (left < 10) left = 10;
-        const maxLeft = window.innerWidth - tooltipWidth - 10;
-        if (left > maxLeft) left = maxLeft;
+      const targetCenterX = targetRect.left + (targetRect.width / 2);
+      let left = targetCenterX - (tooltipWidth / 2);
+      
+      if (left < 10) left = 10;
+      const maxLeft = window.innerWidth - tooltipWidth - 10;
+      if (left > maxLeft) left = maxLeft;
 
-        let top = 0;
-        if (step.position === 'bottom') {
-          // 在目標下方：目標底部 Y 座標 + 15px 緩衝區
-          top = targetRect.bottom + 15; 
-        } else if (step.position === 'top') {
-          // 在目標上方：目標頂部 Y 座標 - 提示框高度 - 15px 緩衝區
-          top = targetRect.top - tooltipHeight - 15; 
-        }
+      let top = 0;
+      if (step.position === 'bottom') {
+        top = targetRect.bottom + 15; 
+      } else if (step.position === 'top') {
+        top = targetRect.top - tooltipHeight - 15; 
+      }
 
-        this.tooltipPos.set({ top, left });
-      }, 500); // 給 scrollIntoView 充足的時間滾動
+      this.tooltipPos.set({ top, left });
     }
   }
 
@@ -200,10 +193,9 @@ export class LogManagement implements OnInit {
   }
 
   @HostListener('window:resize')
-  @HostListener('window:scroll') // 加上監聽滾動事件，滾動時即時更新位置
-  onResizeOrScroll() {
+  onResize() {
+    this.updatePageSize();
     if (this.tutorialService.isActive()) {
-      // 降低更新頻率避免效能問題
        this.updateTourPosition();
     }
   }
