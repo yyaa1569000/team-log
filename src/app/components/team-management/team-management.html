@@ -3,7 +3,8 @@
     <h2>團隊成員列表</h2>
     <!-- 僅 ADMIN 可見新增按鈕 -->
     @if (isAdmin()) {
-      <button class="btn-primary" (click)="openModal()">+ 新增成員</button>
+      <!-- 👇 加上 id="tour-add-member" -->
+      <button id="tour-add-member" class="btn-primary" (click)="openModal()">+ 新增成員</button>
     }
   </div>
 
@@ -120,5 +121,22 @@
         <button class="btn-danger" (click)="confirmDeleteMember()">確認刪除</button>
       </div>
     </div>
+  </div>
+}
+
+<!-- 👇 團隊成員頁面的導覽小視窗 UI -->
+@if (tutorialService.isActive()) {
+  <div class="tour-backdrop" (click)="tutorialService.stopTutorial()"></div>
+  <div class="tour-tooltip" [style.top.px]="tooltipPos().top" [style.left.px]="tooltipPos().left" [class]="tourSteps[currentTourStep()].position">
+    <button class="tour-close-btn" (click)="tutorialService.stopTutorial()">✖</button>
+    <div class="tour-header">✨ {{ tourSteps[currentTourStep()].title }}</div>
+    <div class="tour-body">{{ tourSteps[currentTourStep()].content }}</div>
+    <div class="tour-footer">
+      <span class="tour-dots">
+        @for (step of tourSteps; track $index) { <span class="dot" [class.active]="$index === currentTourStep()"></span> }
+      </span>
+      <button class="tour-next-btn" (click)="nextTourStep()">{{ currentTourStep() === tourSteps.length - 1 ? '🎉 完成教學' : '下一步 ➔' }}</button>
+    </div>
+    <div class="tour-arrow"></div>
   </div>
 }

@@ -1,8 +1,9 @@
-import { Component, OnInit, inject, signal, computed} from '@angular/core';
+import { Component, OnInit, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TeamService, User } from '../../services/team';
 import { AuthService } from '../../services/auth.service';
+import { TutorialService } from '../../services/tutorial.service'; // 👉 引入 TutorialService
 
 @Component({
   selector: 'app-team-management',
@@ -13,21 +14,88 @@ import { AuthService } from '../../services/auth.service';
 })
 export class TeamManagementComponent implements OnInit {
   teamService = inject(TeamService);
+  authService = inject(AuthService);
+  tutorialService = inject(TutorialService); // 👉 注入 TutorialService
+
   isModalOpen = signal(false);
   newMemberName = signal('');
   newMemberUsername = signal('');
-  authService = inject(AuthService);
 
   isDeleteModalOpen = signal(false);
   userToDelete = signal<User | null>(null);
 
-  // 判斷目前登入使用者是否具有 ADMIN 權限
   isAdmin = computed(() => this.authService.currentUser()?.role === 'ADMIN');
-
-  // 💡 用來記錄點擊複製時顯示「已複製」狀態的使用者 ID
   copiedUserId = signal<number | null>(null);
 
-  // 💡 一鍵複製密碼到剪貼簿
+  // 👇 團隊頁面的導覽步驟
+  tourSteps = [
+    { 
+      id: 'tour-add-member', 
+      title: '✨ 團隊成員管理', 
+      content: '點擊此按鈕可以新增團隊成員（如面試官或測試人員），系統會自動賦予預設密碼與一般成員權限。', 
+      position: 'bottom',
+      action: () => {} 
+    }
+  ];
+  currentTourStep = signal(0);
+  tooltipPos = signal({ top: 0, left: 0 });
+
+  constructor() {
+    effect(() => {
+      if (this.tutorialService.isActive()) {
+        setTimeout(() => this.updateTourPosition(), 50); 
+      } else {
+        this.clearHighlight();
+      }
+    });
+  }
+
+  updateTourPosition() {
+    this.clearHighlight();
+    const step = this.tourSteps[this.currentTourStep()];
+    const targetEl = document.getElementById(step.id);
+    
+    if (targetEl) {
+      targetEl.classList.add('tour-highlight-active');
+      targetEl.scrollIntoView({ block: 'center' });
+
+      const targetRect = targetEl.getBoundingClientRect();
+      const tooltipEl = document.querySelector('.tour-tooltip') as HTMLElement;
+      const tooltipWidth = tooltipEl ? tooltipEl.offsetWidth : 300; 
+      const tooltipHeight = tooltipEl ? tooltipEl.offsetHeight : 200; 
+
+      const targetCenterX = targetRect.left + (targetRect.width / 2);
+      let left = targetCenterX - (tooltipWidth / 2);
+      
+      if (left < 10) left = 10;
+      const maxLeft = window.innerWidth - tooltipWidth - 10;
+      if (left > maxLeft) left = maxLeft;
+
+      let top = 0;
+      if (step.position === 'bottom') {
+        top = targetRect.bottom + 15; 
+      } else if (step.position === 'top') {
+        top = targetRect.top - tooltipHeight - 15; 
+      }
+
+      this.tooltipPos.set({ top, left });
+    }
+  }
+
+  clearHighlight() {
+    document.querySelectorAll('.tour-highlight-active').forEach(el => {
+      el.classList.remove('tour-highlight-active');
+    });
+  }
+
+  nextTourStep() {
+    if (this.currentTourStep() < this.tourSteps.length - 1) {
+      this.currentTourStep.set(this.currentTourStep() + 1);
+    } else {
+      this.tutorialService.stopTutorial();
+    }
+  }
+
   copyPassword(user: User, event: Event) {
     event.stopPropagation();
     const pwd = user.password || '123456';
@@ -46,6 +114,14 @@ export class TeamManagementComponent implements OnInit {
 
   ngOnInit() {
     this.teamService.fetchUsers();
+
+    // 只要總開關是開的，進入團隊頁面也會自動啟動教學
+    if (this.tutorialService.isTutorialEnabled() && this.isAdmin()) {
+      setTimeout(() => {
+        this.currentTourStep.set(0);
+        this.tutorialService.startTutorial();
+      }, 300);
+    }
   }
 
   openModal() {
