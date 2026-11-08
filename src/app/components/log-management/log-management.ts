@@ -70,8 +70,8 @@ export class LogManagement implements OnInit {
       id: 'tour-batch', 
       title: '4. AI 智慧總結', 
       content: '【請先勾選項目】：想產生總結時，請先在下方列表勾選特定日誌（打勾），接著點擊此按鈕，AI 就會幫你把勾選的項目匯整成一份精美報告！', 
-      position: 'top',
-      action: () => {} 
+      position: 'top', // 確保視窗在按鈕上方，箭頭朝下指
+      action: () => this.viewMode.set('today') // 切回今日模式，確保能看到下方工具列
     }
   ];
   currentTourStep = signal(0);
