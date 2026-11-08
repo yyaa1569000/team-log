@@ -134,7 +134,7 @@ export class LogManagement implements OnInit {
     });
   }
 
-  updateTourPosition() {
+updateTourPosition() {
     this.clearHighlight();
     const step = this.tourSteps[this.currentTourStep()];
     const targetEl = document.getElementById(step.id);
@@ -143,20 +143,42 @@ export class LogManagement implements OnInit {
       targetEl.classList.add('tour-highlight-active');
       targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-      const rect = targetEl.getBoundingClientRect();
-      const scrollY = window.scrollY;
-      const scrollX = window.scrollX;
-      
-      let top = 0;
-      let left = rect.left + scrollX + (rect.width / 2) - 150; 
+      // 稍微延遲一下，確保畫面滾動完畢且高光效果加上後再計算座標
+      setTimeout(() => {
+        const rect = targetEl.getBoundingClientRect();
+        const scrollY = window.scrollY;
+        const scrollX = window.scrollX;
+        
+        // 抓取小視窗的 DOM 元素來動態取得實際寬高
+        const tooltipEl = document.querySelector('.tour-tooltip') as HTMLElement;
+        const tooltipWidth = tooltipEl ? tooltipEl.offsetWidth : 300; // 預設 300px
+        const tooltipHeight = tooltipEl ? tooltipEl.offsetHeight : 200; // 預設 200px
 
-      if (step.position === 'bottom') {
-        top = rect.bottom + scrollY + 15; 
-      } else if (step.position === 'top') {
-        top = rect.top + scrollY - 160; 
-      }
+        // 計算目標元素的中心點 X 座標
+        const targetCenterX = rect.left + scrollX + (rect.width / 2);
+        
+        // 讓小視窗的中心點對齊目標元素的中心點
+        let left = targetCenterX - (tooltipWidth / 2);
+        
+        // 防止小視窗超出螢幕左邊界
+        if (left < 10) left = 10;
+        
+        // 防止小視窗超出螢幕右邊界
+        const maxLeft = window.innerWidth - tooltipWidth - 10;
+        if (left > maxLeft) left = maxLeft;
 
-      this.tooltipPos.set({ top, left });
+        let top = 0;
+
+        if (step.position === 'bottom') {
+          // 在目標下方：目標的底部 Y 座標 + 向下偏移 15px (給箭頭空間)
+          top = rect.bottom + scrollY + 15; 
+        } else if (step.position === 'top') {
+          // 在目標上方：目標的頂部 Y 座標 - 視窗高度 - 向上偏移 15px (給箭頭空間)
+          top = rect.top + scrollY - tooltipHeight - 15; 
+        }
+
+        this.tooltipPos.set({ top, left });
+      }, 50); // 50ms 延遲
     }
   }
 
