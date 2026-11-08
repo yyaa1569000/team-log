@@ -3,7 +3,6 @@
     <h3>⚙️ 系統與個人設定</h3>
   </div>
 
-  <!-- 1. 系統設定區塊 -->
   @if (toastMessage()) {
     <div class="toast-success">
       {{ toastMessage() }}
@@ -26,13 +25,11 @@
       </div>
 
       <div class="form-actions">
-        <!-- 👇 加上 id="tour-save-system" -->
         <button id="tour-save-system" type="submit" class="btn-primary">儲存系統設定</button>
       </div>
     </form>
   </div>
 
-  <!-- 2. 個人帳號與密碼設定區塊 -->
   @if (accountToastMessage()) {
     <div class="toast-success">
       {{ accountToastMessage() }}
@@ -82,14 +79,13 @@
       </div>
 
       <div class="form-actions">
-        <!-- 👇 加上 id="tour-save-account" -->
         <button id="tour-save-account" type="submit" class="btn-primary">更新個人帳號密碼</button>
       </div>
     </form>
   </div>
 </div>
 
-<!-- 👇 設定頁面的導覽小視窗 UI -->
+<!-- 導覽小視窗 UI -->
 @if (tutorialService.isActive()) {
   <div class="tour-backdrop" (click)="tutorialService.stopTutorial()"></div>
   <div class="tour-tooltip" [style.top.px]="tooltipPos().top" [style.left.px]="tooltipPos().left" [class]="tourSteps[currentTourStep()].position">

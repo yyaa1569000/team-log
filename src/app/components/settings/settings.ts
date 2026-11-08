@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { SettingsService, SystemSettings } from '../../services/settings';
 import { AuthService } from '../../services/auth.service';
 import { HttpClient } from '@angular/common/http';
-import { TutorialService } from '../../services/tutorial.service'; // 👉 引入 TutorialService
+import { TutorialService } from '../../services/tutorial.service';
 
 @Component({
   selector: 'app-settings',
@@ -16,20 +16,18 @@ import { TutorialService } from '../../services/tutorial.service'; // 👉 引�
 export class Settings implements OnInit {
   settingsService = inject(SettingsService);
   authService = inject(AuthService);
-  tutorialService = inject(TutorialService); // 👉 注入 TutorialService
+  tutorialService = inject(TutorialService);
   private http = inject(HttpClient);
 
   toastMessage = signal('');
   accountToastMessage = signal('');
 
-  // 1. 系統設定表單資料
   formData: SystemSettings = {
     workspaceName: '',
     dailyReminder: false,
     pushNotification: false,
   };
 
-  // 2. 個人帳號設定表單資料
   userFormData = {
     name: '',
     username: '',
@@ -37,7 +35,6 @@ export class Settings implements OnInit {
     currentPassword: '', 
   };
 
-  // 👇 設定頁面的導覽步驟
   tourSteps = [
     { 
       id: 'tour-save-system', 
@@ -75,7 +72,6 @@ export class Settings implements OnInit {
       }
     });
 
-    // 監聽導覽開關
     effect(() => {
       if (this.tutorialService.isActive()) {
         setTimeout(() => this.updateTourPosition(), 50); 
@@ -92,28 +88,30 @@ export class Settings implements OnInit {
     
     if (targetEl) {
       targetEl.classList.add('tour-highlight-active');
-      targetEl.scrollIntoView({ block: 'center' });
+      targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-      const targetRect = targetEl.getBoundingClientRect();
-      const tooltipEl = document.querySelector('.tour-tooltip') as HTMLElement;
-      const tooltipWidth = tooltipEl ? tooltipEl.offsetWidth : 300; 
-      const tooltipHeight = tooltipEl ? tooltipEl.offsetHeight : 200; 
+      setTimeout(() => {
+        const targetRect = targetEl.getBoundingClientRect();
+        const tooltipEl = document.querySelector('.tour-tooltip') as HTMLElement;
+        const tooltipWidth = tooltipEl ? tooltipEl.offsetWidth : 300; 
+        const tooltipHeight = tooltipEl ? tooltipEl.offsetHeight : 200; 
 
-      const targetCenterX = targetRect.left + (targetRect.width / 2);
-      let left = targetCenterX - (tooltipWidth / 2);
-      
-      if (left < 10) left = 10;
-      const maxLeft = window.innerWidth - tooltipWidth - 10;
-      if (left > maxLeft) left = maxLeft;
+        const targetCenterX = targetRect.left + (targetRect.width / 2);
+        let left = targetCenterX - (tooltipWidth / 2);
+        
+        if (left < 10) left = 10;
+        const maxLeft = window.innerWidth - tooltipWidth - 10;
+        if (left > maxLeft) left = maxLeft;
 
-      let top = 0;
-      if (step.position === 'bottom') {
-        top = targetRect.bottom + 15; 
-      } else if (step.position === 'top') {
-        top = targetRect.top - tooltipHeight - 15; 
-      }
+        let top = 0;
+        if (step.position === 'bottom') {
+          top = targetRect.bottom + 15; 
+        } else if (step.position === 'top') {
+          top = targetRect.top - tooltipHeight - 15; 
+        }
 
-      this.tooltipPos.set({ top, left });
+        this.tooltipPos.set({ top, left });
+      }, 150);
     }
   }
 
@@ -134,7 +132,6 @@ export class Settings implements OnInit {
   ngOnInit() {
     this.settingsService.fetchSettings();
 
-    // 只要總開關是開的，進入設定頁面也會自動啟動教學
     if (this.tutorialService.isTutorialEnabled()) {
       setTimeout(() => {
         this.currentTourStep.set(0);
@@ -143,7 +140,6 @@ export class Settings implements OnInit {
     }
   }
 
-  // 儲存系統設定
   saveSettings() {
     this.settingsService.updateSettings(this.formData).subscribe({
       next: (res) => {
@@ -155,7 +151,6 @@ export class Settings implements OnInit {
     });
   }
 
-  // 儲存個人帳號與密碼變更
   saveAccountSettings() {
     const user = this.authService.currentUser();
     if (!user || !user.id) return;
