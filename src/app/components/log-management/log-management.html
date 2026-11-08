@@ -1,21 +1,16 @@
 <div class="log-manager">
   <h2>📝 工作日誌管理</h2>
 
-  <!-- 🗂️ 檢視模式切換頁籤 -->
-  <div class="view-tabs">
+  <!-- 👉 加入 id="tour-tabs" -->
+  <div class="view-tabs" id="tour-tabs">
     <button class="tab-btn" [class.active]="viewMode() === 'today'" (click)="viewMode.set('today')">
       📅 今日工作填寫 ({{ todayDate }})
     </button>
-    <button
-      class="tab-btn"
-      [class.active]="viewMode() === 'history'"
-      (click)="viewMode.set('history')"
-    >
+    <button class="tab-btn" [class.active]="viewMode() === 'history'" (click)="viewMode.set('history')">
       📚 歷史紀錄查詢
     </button>
   </div>
 
-  <!-- 歷史日期篩選器 -->
   @if (viewMode() === 'history') {
     <div class="history-filter-card">
       <label>開始日期：</label>
@@ -26,8 +21,8 @@
     </div>
   }
 
-  <!-- 📊 數據統計儀表板卡片 -->
-  <div class="dashboard-stats">
+  <!-- 👉 加入 id="tour-stats" -->
+  <div class="dashboard-stats" id="tour-stats">
     <div class="stat-card">
       <div class="stat-icon">📊</div>
       <div class="stat-info">
@@ -35,7 +30,6 @@
         <span class="stat-value">{{ totalLogsCount() }} 筆</span>
       </div>
     </div>
-
     <div class="stat-card">
       <div class="stat-icon">⏱️</div>
       <div class="stat-info">
@@ -43,7 +37,6 @@
         <span class="stat-value">{{ totalHours() }} 小時</span>
       </div>
     </div>
-
     <div class="stat-card">
       <div class="stat-icon">💻</div>
       <div class="stat-info">
@@ -53,30 +46,19 @@
     </div>
   </div>
 
-  <!-- 提示訊息 -->
   @if (toastMessage()) {
-    <div class="toast-success">
-      {{ toastMessage() }}
-    </div>
+    <div class="toast-success">{{ toastMessage() }}</div>
   }
 
-  <!-- 只有在「今日填寫」模式下，才顯示新增/編輯表單 -->
   @if (viewMode() === 'today') {
-    <div class="log-form-card">
+    <!-- 👉 加入 id="tour-form" -->
+    <div class="log-form-card" id="tour-form">
       <h3>{{ editingLogId() ? '編輯工作日誌' : '新增工作日誌' }}</h3>
 
       <div class="form-group">
         <label>標題 <span class="required">*</span></label>
-        <input
-          type="text"
-          [value]="newTitle()"
-          (input)="newTitle.set($any($event.target).value)"
-          placeholder="例如：修改登入表單"
-          [class.is-invalid]="showErrors() && !newTitle()"
-        />
-        @if (showErrors() && !newTitle()) {
-          <span class="error-text">請輸入日誌標題</span>
-        }
+        <input type="text" [value]="newTitle()" (input)="newTitle.set($any($event.target).value)" placeholder="例如：修改登入表單" [class.is-invalid]="showErrors() && !newTitle()" />
+        @if (showErrors() && !newTitle()) { <span class="error-text">請輸入日誌標題</span> }
       </div>
 
       <div class="form-group">
@@ -91,76 +73,38 @@
 
       <div class="form-group">
         <label>工時 (小時) <span class="required">*</span></label>
-        <input
-          type="number"
-          step="0.5"
-          min="0"
-          [value]="newHours()"
-          (input)="newHours.set($any($event.target).value)"
-          placeholder="例如：2.5"
-          [class.is-invalid]="showErrors() && !newHours()"
-        />
-        @if (showErrors() && !newHours()) {
-          <span class="error-text">請輸入工時</span>
-        }
+        <input type="number" step="0.5" min="0" [value]="newHours()" (input)="newHours.set($any($event.target).value)" placeholder="例如：2.5" [class.is-invalid]="showErrors() && !newHours()" />
+        @if (showErrors() && !newHours()) { <span class="error-text">請輸入工時</span> }
       </div>
 
       <div class="form-group">
         <label>詳細內容 <span class="required">*</span></label>
-        <textarea
-          rows="3"
-          [value]="newContent()"
-          (input)="newContent.set($any($event.target).value)"
-          placeholder="請說明今天完成的工作項目細節..."
-          [class.is-invalid]="showErrors() && !newContent()"
-        ></textarea>
-        @if (showErrors() && !newContent()) {
-          <span class="error-text">請輸入工作內容</span>
-        }
+        <textarea rows="3" [value]="newContent()" (input)="newContent.set($any($event.target).value)" placeholder="請說明今天完成的工作項目細節..." [class.is-invalid]="showErrors() && !newContent()"></textarea>
+        @if (showErrors() && !newContent()) { <span class="error-text">請輸入工作內容</span> }
       </div>
 
       <div class="form-actions" style="display: flex; gap: 10px">
-        @if (editingLogId()) {
-          <button class="btn-cancel-edit" (click)="cancelEdit()">取消編輯</button>
-        }
-        <!-- 💡 改回一般的儲存按鈕 -->
+        @if (editingLogId()) { <button class="btn-cancel-edit" (click)="cancelEdit()">取消編輯</button> }
         <button class="btn-submit" (click)="submitLog()" [disabled]="isSubmitting()">
-          @if (isSubmitting()) {
-            <span class="spinner"></span> 儲存中...
-          } @else {
-            {{ editingLogId() ? '儲存變更' : '提交日誌' }}
-          }
+          @if (isSubmitting()) { <span class="spinner"></span> 儲存中... } @else { {{ editingLogId() ? '儲存變更' : '提交日誌' }} }
         </button>
       </div>
     </div>
   }
 
-  <!-- 日誌列表 -->
   <div class="log-list-section">
     <h3>團隊日誌列表</h3>
 
-    <!-- 關鍵字搜尋與篩選列 -->
-    <div class="filter-bar">
-      <input
-        type="text"
-        placeholder="🔍 搜尋標題、內容或作者..."
-        [value]="searchQuery()"
-        (input)="searchQuery.set($any($event.target).value)"
-      />
-
+    <!-- 👉 加入 id="tour-filter" -->
+    <div class="filter-bar" id="tour-filter">
+      <input type="text" placeholder="🔍 搜尋標題、內容或作者..." [value]="searchQuery()" (input)="searchQuery.set($any($event.target).value)" />
       @if (authService.currentUser()?.role === 'ADMIN') {
         <select [value]="selectedUser()" (change)="selectedUser.set($any($event.target).value)">
           <option value="全部">👥 所有成員</option>
-          @for (user of uniqueUsers(); track user) {
-            <option [value]="user">👤 {{ user }}</option>
-          }
+          @for (user of uniqueUsers(); track user) { <option [value]="user">👤 {{ user }}</option> }
         </select>
       }
-
-      <select
-        [value]="selectedCategory()"
-        (change)="selectedCategory.set($any($event.target).value)"
-      >
+      <select [value]="selectedCategory()" (change)="selectedCategory.set($any($event.target).value)">
         <option value="全部">全部分類</option>
         <option value="開發">💻 開發</option>
         <option value="會議">🤝 會議</option>
@@ -169,76 +113,39 @@
       </select>
     </div>
 
-    <!-- 💡 批次操作工具列 (新增 AI 生成按鈕) -->
     @if (filteredLogs().length > 0) {
       <div class="batch-action-bar">
         <div class="batch-left">
           <button class="btn-batch-sub" (click)="selectAllCurrentPage()">☑️ 全選本頁</button>
-          <button
-            class="btn-batch-sub"
-            (click)="clearSelection()"
-            [disabled]="selectedLogIds().size === 0"
-          >
-            取消選取
-          </button>
-          
-          <!-- 💡 黃金位置的 AI 生成按鈕 -->
-          <button 
-            class="btn-generate-ai" 
-            (click)="generateSummaryFromSelection()"
-            [disabled]="isGeneratingSummary()"
-          >
-            @if (selectedLogIds().size > 0) {
-              ✨ 生成選取摘要 ({{selectedLogIds().size}}筆)
-            } @else if (isSingleDateSelected()) {
-              ✨ 一鍵總結本日工作
-            } @else {
-              請先勾選項目
-            }
+          <button class="btn-batch-sub" (click)="clearSelection()" [disabled]="selectedLogIds().size === 0">取消選取</button>
+          <button class="btn-generate-ai" (click)="generateSummaryFromSelection()" [disabled]="isGeneratingSummary()">
+            @if (selectedLogIds().size > 0) { ✨ 生成選取摘要 ({{selectedLogIds().size}}筆) } @else if (isSingleDateSelected()) { ✨ 一鍵總結本日工作 } @else { 請先勾選項目 }
           </button>
         </div>
         <div class="batch-right">
-          <button
-            class="btn-batch-delete"
-            (click)="openBatchDeleteModal()"
-            [disabled]="selectedLogIds().size === 0"
-          >
-            🗑️ 刪除選取 ({{ selectedLogIds().size }})
-          </button>
-          <button class="btn-batch-delete-all" (click)="openDeleteAllModal()">
-            🚨 刪除全部 ({{ filteredLogs().length }})
-          </button>
+          <button class="btn-batch-delete" (click)="openBatchDeleteModal()" [disabled]="selectedLogIds().size === 0">🗑️ 刪除選取 ({{ selectedLogIds().size }})</button>
+          <button class="btn-batch-delete-all" (click)="openDeleteAllModal()">🚨 刪除全部 ({{ filteredLogs().length }})</button>
         </div>
       </div>
     }
 
-    <!-- 💡 顯示生成的單日大總結 -->
     @if (dailyAiSummary()) {
       <div class="global-ai-summary">
         <div class="ai-header-wrapper">
-          <div class="ai-header">
-            <span class="ai-icon">✨</span>
-            <span class="ai-title">Gemini 工作總結報告</span>
-          </div>
+          <div class="ai-header"><span class="ai-icon">✨</span><span class="ai-title">Gemini 工作總結報告</span></div>
           <button class="btn-copy" (click)="copySummary()" title="複製內容">📋 複製</button>
         </div>
         <p class="ai-content">{{ dailyAiSummary() }}</p>
       </div>
     }
 
-    <!-- 列表展示 -->
     @if (filteredLogs().length > 0) {
       <div class="log-grid">
         @for (log of paginatedLogs(); track log.id) {
           <div class="log-card" [class.is-selected]="selectedLogIds().has(log.id)">
             <div class="log-header">
               <div class="log-meta">
-                <input
-                  type="checkbox"
-                  class="log-checkbox"
-                  [checked]="selectedLogIds().has(log.id)"
-                  (change)="toggleSelection(log.id)"
-                />
+                <input type="checkbox" class="log-checkbox" [checked]="selectedLogIds().has(log.id)" (change)="toggleSelection(log.id)" />
                 <span class="author-badge">👤 {{ log.authorName || '未知' }}</span>
                 <span class="category-badge">{{ log.category }}</span>
                 <span class="hours-badge">⏱️ {{ log.hours }} 小時</span>
@@ -246,14 +153,11 @@
               </div>
               <div class="log-actions">
                 <button class="btn-edit" (click)="startEdit(log)" title="編輯日誌">✏️</button>
-                <button class="btn-delete" (click)="openDeleteModal(log.id)" title="刪除日誌">
-                  🗑️
-                </button>
+                <button class="btn-delete" (click)="openDeleteModal(log.id)" title="刪除日誌">🗑️</button>
               </div>
             </div>
             <h4>{{ log.title }}</h4>
             <p>{{ log.content }}</p>
-            <!-- 💡 移除了原本每張卡片底下的獨立 AI 摘要區塊 -->
           </div>
         }
       </div>
@@ -266,36 +170,30 @@
         </div>
       }
     } @else {
-      <div class="empty-state">
-        <p>📭 查無符合條件的工作日誌</p>
-      </div>
+      <div class="empty-state"><p>📭 查無符合條件的工作日誌</p></div>
     }
   </div>
 
-  <!-- 刪除確認 Modal -->
-  <app-confirm-modal
-    [isOpen]="showDeleteModal()"
-    [title]="deleteModalTitle()"
-    [message]="deleteModalMessage()"
-    type="danger"
-    confirmText="確認刪除"
-    (confirmed)="handleConfirmDelete()"
-    (cancelled)="showDeleteModal.set(false)"
-  >
-  </app-confirm-modal>
+  <app-confirm-modal [isOpen]="showDeleteModal()" [title]="deleteModalTitle()" [message]="deleteModalMessage()" type="danger" confirmText="確認刪除" (confirmed)="handleConfirmDelete()" (cancelled)="showDeleteModal.set(false)"></app-confirm-modal>
 
-  <!-- 警告 Modal -->
   @if (showWarningModal()) {
-    <app-confirm-modal
-      [isOpen]="showWarningModal()"
-      title="提示"
-      [message]="warningMessage()"
-      confirmText="好"
-      type="success"
-      [showCancel]="false"
-      (confirmed)="closeWarningModal()"
-      (cancelled)="closeWarningModal()"
-    >
-    </app-confirm-modal>
+    <app-confirm-modal [isOpen]="showWarningModal()" title="提示" [message]="warningMessage()" confirmText="好" type="success" [showCancel]="false" (confirmed)="closeWarningModal()" (cancelled)="closeWarningModal()"></app-confirm-modal>
+  }
+
+  <!-- 👇 導覽小視窗 UI 👇 -->
+  @if (tutorialService.isActive()) {
+    <div class="tour-backdrop" (click)="tutorialService.stopTutorial()"></div>
+    <div class="tour-tooltip" [style.top.px]="tooltipPos().top" [style.left.px]="tooltipPos().left" [class]="tourSteps[currentTourStep()].position">
+      <button class="tour-close-btn" (click)="tutorialService.stopTutorial()">✖</button>
+      <div class="tour-header">✨ {{ tourSteps[currentTourStep()].title }}</div>
+      <div class="tour-body">{{ tourSteps[currentTourStep()].content }}</div>
+      <div class="tour-footer">
+        <span class="tour-dots">
+          @for (step of tourSteps; track $index) { <span class="dot" [class.active]="$index === currentTourStep()"></span> }
+        </span>
+        <button class="tour-next-btn" (click)="nextTourStep()">{{ currentTourStep() === tourSteps.length - 1 ? '🎉 完成教學' : '下一步 ➔' }}</button>
+      </div>
+      <div class="tour-arrow"></div>
+    </div>
   }
 </div>

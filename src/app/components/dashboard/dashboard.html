@@ -49,6 +49,14 @@
           <h3>📊 系統總覽儀表板</h3>
           <p class="subtitle">歡迎回來！以下是今日的系統即時數據統計。</p>
         </div>
+        <!-- 👇 新增的教學開關按鈕 -->
+          <button 
+            class="btn-tutorial-toggle" 
+            (click)="tutorialService.isActive.set(!tutorialService.isActive())"
+            style="padding: 8px 16px; border-radius: 8px; border: none; background: #3b82f6; color: white; cursor: pointer; font-weight: bold; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3); transition: all 0.2s;"
+          >
+            {{ tutorialService.isActive() ? '🛑 關閉系統導覽' : '💡 開啟系統導覽' }}
+          </button>
 
         <div class="stats-grid">
           <div class="stat-card">
@@ -75,6 +83,7 @@
             </div>
           </div>
         </div>
+
       </div>
     } @else {
       <!-- 子路由頁面 -->

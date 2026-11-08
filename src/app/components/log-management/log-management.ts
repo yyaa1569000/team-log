@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed, HostListener } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, HostListener, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LogService } from '../../services/log';
@@ -6,6 +6,7 @@ import { ConfirmModalComponent } from '../confirm-modal/confirm-modal.component'
 import { AuthService } from '../../services/auth.service';
 import { forkJoin } from 'rxjs'; 
 import { LoadingService } from '../../loading.service';
+import { TutorialService } from '../../services/tutorial.service'; // 👇 引入
 
 @Component({
   selector: 'app-log-management',
@@ -18,6 +19,7 @@ export class LogManagement implements OnInit {
   logService = inject(LogService);
   authService = inject(AuthService);
   loadingService = inject(LoadingService);
+  tutorialService = inject(TutorialService); // 👇 注入
 
   newTitle = signal('');
   newCategory = signal('開發');
@@ -27,7 +29,7 @@ export class LogManagement implements OnInit {
   toastMessage = signal('');
 
   isSubmitting = signal(false);
-  isGeneratingSummary = signal(false); // 💡 新增：獨立控制 AI 總結 Loading 狀態
+  isGeneratingSummary = signal(false); 
 
   selectedLogIds = signal<Set<number>>(new Set());
   deleteMode = signal<'single' | 'batch' | 'all' | null>(null);
@@ -39,8 +41,17 @@ export class LogManagement implements OnInit {
   showDeleteModal = signal(false);
   deletingLogId = signal<number | null>(null);
 
-  // 💡 新增：儲存產生的 AI 總結報告
   dailyAiSummary = signal<string | null>(null);
+
+  // 👇 導覽系統專用變數
+  tourSteps = [
+    { id: 'tour-tabs', title: '切換視角', content: '在這裡可以切換「今日填寫」或是查詢「歷史紀錄」。', position: 'bottom' },
+    { id: 'tour-stats', title: '即時數據', content: '這裡會即時統計您的工作產出與總工時，方便掌握進度。', position: 'bottom' },
+    { id: 'tour-form', title: '快速填寫', content: '選擇分類、輸入工時與內容，就能快速提交今日日誌。', position: 'top' },
+    { id: 'tour-filter', title: '精準搜尋', content: '管理員可以在這裡切換不同成員，或是使用關鍵字快速尋找日誌。', position: 'bottom' }
+  ];
+  currentTourStep = signal(0);
+  tooltipPos = signal({ top: 0, left: 0 });
 
   deleteModalTitle = computed(() => {
     const mode = this.deleteMode();
@@ -79,13 +90,65 @@ export class LogManagement implements OnInit {
     return [...new Set(users)];
   });
 
-  // 💡 防呆：如果只有選「特定單一日期」，才允許一鍵總結該日
   isSingleDateSelected = computed(() => {
     if (this.viewMode() === 'today') return true;
     const start = this.startDateFilter();
     const end = this.endDateFilter();
     return start && end && start === end;
   });
+
+  constructor() {
+    // 👇 監聽導覽狀態，動態計算位置
+    effect(() => {
+      if (this.tutorialService.isActive()) {
+        setTimeout(() => this.updateTourPosition(), 100); 
+      } else {
+        this.currentTourStep.set(0); 
+        this.clearHighlight();
+      }
+    });
+  }
+
+  // 👇 更新小視窗位置
+  updateTourPosition() {
+    this.clearHighlight();
+    const step = this.tourSteps[this.currentTourStep()];
+    const targetEl = document.getElementById(step.id);
+    
+    if (targetEl) {
+      targetEl.classList.add('tour-highlight-active');
+      targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      const rect = targetEl.getBoundingClientRect();
+      const scrollY = window.scrollY;
+      const scrollX = window.scrollX;
+      
+      let top = 0;
+      let left = rect.left + scrollX + (rect.width / 2) - 150; 
+
+      if (step.position === 'bottom') {
+        top = rect.bottom + scrollY + 15; 
+      } else if (step.position === 'top') {
+        top = rect.top + scrollY - 160; 
+      }
+
+      this.tooltipPos.set({ top, left });
+    }
+  }
+
+  clearHighlight() {
+    document.querySelectorAll('.tour-highlight-active').forEach(el => {
+      el.classList.remove('tour-highlight-active');
+    });
+  }
+
+  nextTourStep() {
+    if (this.currentTourStep() < this.tourSteps.length - 1) {
+      this.currentTourStep.set(this.currentTourStep() + 1);
+    } else {
+      this.tutorialService.stopTutorial();
+    }
+  }
 
   @HostListener('window:beforeunload', ['$event'])
   unloadNotification($event: any) {
@@ -97,6 +160,9 @@ export class LogManagement implements OnInit {
   @HostListener('window:resize')
   onResize() {
     this.updatePageSize();
+    if (this.tutorialService.isActive()) {
+        this.updateTourPosition();
+    }
   }
 
   onStartDateChange(event: any) {
@@ -110,7 +176,7 @@ export class LogManagement implements OnInit {
     }
     this.startDateFilter.set(selectedDate);
     if (!currentEnd) this.endDateFilter.set(selectedDate);
-    this.dailyAiSummary.set(null); // 切換日期時清空舊總結
+    this.dailyAiSummary.set(null); 
   }
 
   onEndDateChange(event: any) {
@@ -124,7 +190,7 @@ export class LogManagement implements OnInit {
     } else {
       this.endDateFilter.set(selectedEndDate);
     }
-    this.dailyAiSummary.set(null); // 切換日期時清空舊總結
+    this.dailyAiSummary.set(null); 
   }
 
   closeWarningModal() {
@@ -232,7 +298,6 @@ export class LogManagement implements OnInit {
     this.selectedLogIds.set(new Set());
   }
 
-  // 💡 移除原本綁死在提交日誌的 AI 呼叫
   submitLog() {
     if (!this.newTitle().trim() || !this.newContent().trim() || !this.newHours()) {
       this.showErrors.set(true);
@@ -240,7 +305,7 @@ export class LogManagement implements OnInit {
     }
 
     this.isSubmitting.set(true);
-    this.loadingService.show('儲存中...'); // 改為一般儲存提示
+    this.loadingService.show('儲存中...'); 
 
     const editId = this.editingLogId();
     const currentUser = this.authService.currentUser();
@@ -294,17 +359,13 @@ export class LogManagement implements OnInit {
     }
   }
 
-  // 💡 新增：生成勾選項目 / 單日總結
   generateSummaryFromSelection() {
     let idsToSummarize: number[] = [];
 
-    // 如果有勾選，以勾選為主
     if (this.selectedLogIds().size > 0) {
       idsToSummarize = Array.from(this.selectedLogIds());
     } 
-    // 沒勾選但目前停留在單一日期，自動全包該日
     else if (this.isSingleDateSelected() && this.filteredLogs().length > 0) {
-       // 防呆：確認是否要覆蓋舊摘要
       if (this.dailyAiSummary() && !confirm('要重新生成一份新的總結覆蓋原有的嗎？')) {
         return;
       }
@@ -318,13 +379,12 @@ export class LogManagement implements OnInit {
     this.isGeneratingSummary.set(true);
     this.loadingService.show('🧠 AI 智慧總結生成中... (約 5~15 秒，請勿關閉視窗)');
 
-    // 呼叫後端 API
     this.logService.generateBatchSummary(idsToSummarize).subscribe({
       next: (res) => {
         this.dailyAiSummary.set(res.summary);
         this.isGeneratingSummary.set(false);
-        this.clearSelection(); // 生成完畢後清空勾選
-        window.scrollTo({ top: 0, behavior: 'smooth' }); // 自動捲動到最上面看總結
+        this.clearSelection(); 
+        window.scrollTo({ top: 0, behavior: 'smooth' }); 
         this.toastMessage.set('✨ AI 總結生成完畢！');
         setTimeout(() => this.toastMessage.set(''), 3000);
       },
@@ -337,7 +397,6 @@ export class LogManagement implements OnInit {
     });
   }
 
-  // 💡 新增：一鍵複製總結到剪貼簿
   copySummary() {
     const summary = this.dailyAiSummary();
     if (summary) {

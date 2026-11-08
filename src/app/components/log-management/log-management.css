@@ -712,3 +712,135 @@
   background: #dbeafe;
   color: #1d4ed8;
 }
+
+/* ================= 導覽系統專用 CSS ================= */
+
+.tour-highlight-active {
+  position: relative !important;
+  z-index: 9999 !important;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.4), 0 0 15px rgba(59, 130, 246, 0.6) !important;
+  border-radius: 8px !important;
+  background-color: white !important;
+  transition: all 0.3s ease-in-out;
+}
+
+.tour-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(2px);
+  z-index: 9998;
+  cursor: pointer;
+}
+
+.tour-tooltip {
+  position: absolute;
+  z-index: 10000;
+  width: 300px;
+  background: linear-gradient(145deg, #ffffff, #f3f4f6);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+  color: #1f2937;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  animation: tourPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes tourPop {
+  0% { opacity: 0; transform: scale(0.9) translateY(10px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.tour-close-btn {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.tour-close-btn:hover {
+  color: #ef4444;
+}
+
+.tour-header {
+  font-size: 18px;
+  font-weight: 700;
+  color: #2563eb;
+  margin-bottom: 8px;
+}
+.tour-body {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #4b5563;
+  margin-bottom: 15px;
+}
+
+.tour-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 15px;
+}
+
+.tour-dots {
+  display: flex;
+  gap: 6px;
+}
+.tour-dots .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #d1d5db;
+  transition: all 0.3s;
+}
+.tour-dots .dot.active {
+  background: #3b82f6;
+  transform: scale(1.3);
+}
+
+.tour-next-btn {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
+  transition: background 0.2s;
+}
+.tour-next-btn:hover {
+  background: #1d4ed8;
+}
+
+.tour-arrow {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-style: solid;
+}
+
+.tour-tooltip.bottom .tour-arrow {
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 0 10px 10px 10px;
+  border-color: transparent transparent #ffffff transparent;
+}
+
+.tour-tooltip.top .tour-arrow {
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 10px 10px 0 10px;
+  border-color: #f3f4f6 transparent transparent transparent;
+}

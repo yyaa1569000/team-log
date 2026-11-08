@@ -8,6 +8,8 @@ import { DashboardService } from '../../services/dashboard.service';
 import { AuthService } from '../../services/auth.service';
 import { ConfirmModalComponent } from '../../components/confirm-modal/confirm-modal.component';
 
+import { TutorialService } from '../../services/tutorial.service';
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -21,19 +23,17 @@ export class Dashboard implements OnInit, OnDestroy {
   settingsService = inject(SettingsService);
   dashboardService = inject(DashboardService);
   authService = inject(AuthService);
+  tutorialService = inject(TutorialService); // 👇 注入 Service
 
   todayDate = new Date().toLocaleDateString('sv');
   isOverview = false;
 
-  // 💡 閒置自動登出設定改為 20 分鐘 (20 * 60 * 1000 毫秒)
   private idleTimeout: any;
   private countdownInterval: any;
   private readonly IDLE_TIME_LIMIT = 20 * 60 * 1000;
   private boundResetTimer = this.resetIdleTimer.bind(this);
 
-  // 剩餘秒數 Signal (初始值為 20 分鐘的總秒數)
   remainingSeconds = signal(this.IDLE_TIME_LIMIT / 1000);
-
   isAutoLogoutModalOpen = signal(false);
 
   constructor() {
@@ -89,15 +89,12 @@ export class Dashboard implements OnInit, OnDestroy {
     this.resetIdleTimer();
   }
 
-  // 重置閒置計時器與倒數計時
   resetIdleTimer() {
     clearTimeout(this.idleTimeout);
     clearInterval(this.countdownInterval);
 
-    // 重置剩餘秒數
     this.remainingSeconds.set(this.IDLE_TIME_LIMIT / 1000);
 
-    // 啟動每秒扣 1 的倒數
     this.countdownInterval = setInterval(() => {
       const current = this.remainingSeconds();
       if (current > 0) {
@@ -105,7 +102,6 @@ export class Dashboard implements OnInit, OnDestroy {
       }
     }, 1000);
 
-    // 啟動最終自動登出計時
     this.idleTimeout = setTimeout(() => {
       this.performAutoLogout();
     }, this.IDLE_TIME_LIMIT);
@@ -139,7 +135,7 @@ export class Dashboard implements OnInit, OnDestroy {
   logout() {
     this.authService.logout();
   }
-  // 💡 將剩餘秒數轉換為「分:秒」格式（例如 20:00）
+
   formattedIdleTime = computed(() => {
     const totalSeconds = this.remainingSeconds();
     const minutes = Math.floor(totalSeconds / 60);
