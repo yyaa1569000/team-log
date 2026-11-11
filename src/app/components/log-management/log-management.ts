@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed, HostListener, effect, Directive, ElementRef, AfterViewInit, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, HostListener, effect, Directive, ElementRef, AfterViewInit, Output, EventEmitter, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LogService } from '../../services/log';
@@ -8,30 +8,41 @@ import { forkJoin } from 'rxjs';
 import { LoadingService } from '../../loading.service';
 import { TutorialService } from '../../services/tutorial.service'; 
 
-// 👇 直接在這裡宣告 Directive，不需要另外建檔案，保證編譯成功 👇
+// 👇 自動偵測文字溢出的 Directive (加入防抖機制) 👇
 @Directive({
   selector: '[appOverflowCheck]',
   standalone: true
 })
-export class OverflowCheckDirective implements AfterViewInit {
+export class OverflowCheckDirective implements AfterViewInit, OnDestroy {
   @Output() hasOverflow = new EventEmitter<boolean>();
+  private resizeTimeout: any;
 
   constructor(private el: ElementRef) {}
 
   ngAfterViewInit() {
-    // 延遲一點點確保 DOM 已經完全渲染
-    setTimeout(() => this.checkOverflow(), 100);
+    this.scheduleCheck();
   }
 
   @HostListener('window:resize')
   onResize() {
-    this.checkOverflow();
+    this.scheduleCheck();
   }
 
-  private checkOverflow() {
-    const el = this.el.nativeElement;
-    // 判斷實際內容高度是否大於可視高度 (有設定 line-clamp 的容器)
-    this.hasOverflow.emit(el.scrollHeight > el.clientHeight);
+  private scheduleCheck() {
+    // 每次縮放時先清除舊的計時器，避免瘋狂重複執行 (防抖機制)
+    clearTimeout(this.resizeTimeout);
+    
+    // 延遲 200 毫秒，確保瀏覽器把「文字換行與排版」徹底處理完再量高度
+    this.resizeTimeout = setTimeout(() => {
+      const el = this.el.nativeElement;
+      // 判斷實際內容高度是否大於可視高度
+      this.hasOverflow.emit(el.scrollHeight > el.clientHeight);
+    }, 200); 
+  }
+
+  // 元件銷毀時清除計時器
+  ngOnDestroy() {
+    clearTimeout(this.resizeTimeout);
   }
 }
 // 👆 Directive 宣告結束 👆
@@ -40,7 +51,7 @@ export class OverflowCheckDirective implements AfterViewInit {
 @Component({
   selector: 'app-log-management',
   standalone: true,
-  // 👇 記得在這裡的 imports 陣列加入 OverflowCheckDirective 👇
+  // 👇 記得匯入 OverflowCheckDirective 👇
   imports: [CommonModule, FormsModule, ConfirmModalComponent, OverflowCheckDirective],
   templateUrl: './log-management.html',
   styleUrls: ['./log-management.css'],
@@ -76,7 +87,7 @@ export class LogManagement implements OnInit {
   // 控制彈出詳細視窗
   selectedLogForModal = signal<any | null>(null);
 
-  // 👇 紀錄每一張卡片是否發生文字溢出 👇
+  // 紀錄每一張卡片是否發生文字溢出
   overflowMap = signal<{ [key: number]: boolean }>({});
 
   onOverflowStatusChange(id: number, status: boolean) {
