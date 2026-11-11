@@ -7,6 +7,7 @@ import { AuthService } from '../../services/auth.service';
 import { forkJoin } from 'rxjs'; 
 import { LoadingService } from '../../loading.service';
 import { TutorialService } from '../../services/tutorial.service'; 
+import { OverflowCheckDirective } from '../../directives/overflow-check.directive'; // 依你的路徑調整
 
 @Component({
   selector: 'app-log-management',
@@ -76,6 +77,13 @@ export class LogManagement implements OnInit {
       action: () => this.viewMode.set('today') 
     }
   ];
+
+  // 記錄哪些卡片需要顯示「查看更多」
+  overflowMap = signal<{ [key: number]: boolean }>({});
+
+  onOverflowStatusChange(id: number, status: boolean) {
+    this.overflowMap.update(map => ({ ...map, [id]: status }));
+  }
   
   currentTourStep = signal(0);
   tooltipPos = signal({ top: 0, left: 0 });

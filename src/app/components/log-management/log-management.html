@@ -152,7 +152,6 @@
     @if (filteredLogs().length > 0) {
       <div class="log-grid">
         @for (log of paginatedLogs(); track log.id) {
-          <!-- 👇 設為固定高度與排版，超出部分隱藏，並附帶查看更多按鈕 👇 -->
           <div class="log-card" [class.is-selected]="selectedLogIds().has(log.id)" style="height: 240px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; position: relative; box-sizing: border-box;">
             <div>
               <div class="log-header">
@@ -169,11 +168,16 @@
                 </div>
               </div>
               <h4 style="margin: 8px 0 4px 0; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ log.title }}</h4>
-              <p style="margin: 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; color: #4a5568; font-size: 14px; line-height: 1.5;">{{ log.content }}</p>
+              
+              <!-- 👇 加上 Overflow 指令動態偵測是否超過範圍 👇 -->
+              <p appOverflowCheck (hasOverflow)="onOverflowStatusChange(log.id, $event)" style="margin: 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; color: #4a5568; font-size: 14px; line-height: 1.5;">{{ log.content }}</p>
             </div>
             
-            <div style="padding-top: 8px; border-top: 1px solid #edf2f7; display: flex; justify-content: flex-end; background: #fff;">
-              <button (click)="openLogDetail(log)" style="background: #3182ce; color: white; border: none; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 500;">查看更多 ▼</button>
+            <!-- 👇 只有當該筆資料內容確實溢出時，才顯示「查看更多」按鈕 👇 -->
+            <div style="padding-top: 8px; border-top: 1px solid #edf2f7; display: flex; justify-content: flex-end; background: #fff; min-height: 28px;">
+              @if (overflowMap()[log.id]) {
+                <button (click)="openLogDetail(log)" style="background: #3182ce; color: white; border: none; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 500;">查看更多 ▼</button>
+              }
             </div>
           </div>
         }
