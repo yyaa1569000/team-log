@@ -151,9 +151,12 @@
 
     @if (filteredLogs().length > 0) {
       <div class="log-grid">
-        @for (log of paginatedLogs(); track log.id) {
-          <div class="log-card" [class.is-selected]="selectedLogIds().has(log.id)" style="height: 240px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; position: relative; box-sizing: border-box;">
-            <div>
+@for (log of paginatedLogs(); track log.id) {
+          <!-- 👇 修改外層卡片樣式，確保按鈕能釘在底部 👇 -->
+          <div class="log-card" [class.is-selected]="selectedLogIds().has(log.id)" style="height: 240px; display: flex; flex-direction: column; overflow: hidden; position: relative; box-sizing: border-box; padding-bottom: 0;">
+            
+            <!-- 上方固定區塊 (包含 Meta 與標題) -->
+            <div style="flex-shrink: 0;">
               <div class="log-header">
                 <div class="log-meta">
                   <input type="checkbox" class="log-checkbox" [checked]="selectedLogIds().has(log.id)" (change)="toggleSelection(log.id)" />
@@ -168,13 +171,15 @@
                 </div>
               </div>
               <h4 style="margin: 8px 0 4px 0; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ log.title }}</h4>
-              
-              <!-- 👇 綁定 appOverflowCheck 指令，並加上 word-break: break-all 防禦連續英文字母 👇 -->
+            </div>
+
+            <!-- 👇 內文區塊：設定 flex-grow: 1 與 min-height: 0，自動吸收剩餘空間 👇 -->
+            <div style="flex-grow: 1; min-height: 0; overflow: hidden;">
               <p appOverflowCheck (hasOverflow)="onOverflowStatusChange(log.id, $event)" style="margin: 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; color: #4a5568; font-size: 14px; line-height: 1.5; word-break: break-all;">{{ log.content }}</p>
             </div>
             
-            <!-- 👇 只有當該筆資料內容確實溢出時，才顯示「查看更多」按鈕 👇 -->
-            <div style="padding-top: 8px; border-top: 1px solid #edf2f7; display: flex; justify-content: flex-end; background: #fff; min-height: 28px;">
+            <!-- 👇 底部按鈕區塊：設定 flex-shrink: 0 確保高度不會被擠壓 👇 -->
+            <div style="flex-shrink: 0; padding: 8px 0; border-top: 1px solid #edf2f7; display: flex; justify-content: flex-end; background: #fff; min-height: 32px; box-sizing: border-box;">
               @if (overflowMap()[log.id]) {
                 <button (click)="openLogDetail(log)" style="background: #3182ce; color: white; border: none; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 500;">查看更多 ▼</button>
               }
