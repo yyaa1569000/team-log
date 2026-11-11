@@ -8,41 +8,43 @@ import { forkJoin } from 'rxjs';
 import { LoadingService } from '../../loading.service';
 import { TutorialService } from '../../services/tutorial.service'; 
 
-// 👇 自動偵測文字溢出的 Directive (加入防抖機制) 👇
+// 👇 終極版：自動偵測文字溢出的 Directive 👇
 @Directive({
   selector: '[appOverflowCheck]',
   standalone: true
 })
 export class OverflowCheckDirective implements AfterViewInit, OnDestroy {
   @Output() hasOverflow = new EventEmitter<boolean>();
-  private resizeTimeout: any;
+  private observer!: ResizeObserver;
 
   constructor(private el: ElementRef) {}
 
   ngAfterViewInit() {
-    this.scheduleCheck();
-  }
-
-  @HostListener('window:resize')
-  onResize() {
-    this.scheduleCheck();
-  }
-
-  private scheduleCheck() {
-    // 每次縮放時先清除舊的計時器，避免瘋狂重複執行 (防抖機制)
-    clearTimeout(this.resizeTimeout);
+    // 使用現代瀏覽器原生的 ResizeObserver，只要元素大小、內容或排版一改變，就會自動觸發！絕對精準。
+    this.observer = new ResizeObserver(() => {
+      this.checkOverflow();
+    });
+    this.observer.observe(this.el.nativeElement);
     
-    // 延遲 200 毫秒，確保瀏覽器把「文字換行與排版」徹底處理完再量高度
-    this.resizeTimeout = setTimeout(() => {
-      const el = this.el.nativeElement;
-      // 判斷實際內容高度是否大於可視高度
-      this.hasOverflow.emit(el.scrollHeight > el.clientHeight);
-    }, 200); 
+    // 初始強制檢查一次 (給一點延遲確保資料已綁定)
+    setTimeout(() => this.checkOverflow(), 200);
   }
 
-  // 元件銷毀時清除計時器
+  private checkOverflow() {
+    const el = this.el.nativeElement;
+    // 判斷：實際內容高度 > 可視高度 (加 2px 容錯，避免小數點運算誤差)
+    const isOverflowing = el.scrollHeight > (el.clientHeight + 2);
+    
+    // 💡 使用 Promise.resolve().then() 避免 Angular 報錯 "ExpressionChangedAfterItHasBeenCheckedError"
+    Promise.resolve().then(() => {
+      this.hasOverflow.emit(isOverflowing);
+    });
+  }
+
   ngOnDestroy() {
-    clearTimeout(this.resizeTimeout);
+    if (this.observer) {
+      this.observer.disconnect();
+    }
   }
 }
 // 👆 Directive 宣告結束 👆
@@ -51,7 +53,6 @@ export class OverflowCheckDirective implements AfterViewInit, OnDestroy {
 @Component({
   selector: 'app-log-management',
   standalone: true,
-  // 👇 記得匯入 OverflowCheckDirective 👇
   imports: [CommonModule, FormsModule, ConfirmModalComponent, OverflowCheckDirective],
   templateUrl: './log-management.html',
   styleUrls: ['./log-management.css'],
