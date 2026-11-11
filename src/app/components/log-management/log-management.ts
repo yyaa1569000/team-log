@@ -43,6 +43,9 @@ export class LogManagement implements OnInit {
 
   dailyAiSummary = signal<string | null>(null);
 
+  // 👇 新增：控制查看更多詳細內容彈出視窗的 Signal 👇
+  selectedLogForModal = signal<any | null>(null);
+
   tourSteps = [
     { 
       id: 'tour-tab-today', 
@@ -127,12 +130,19 @@ export class LogManagement implements OnInit {
         const step = this.tourSteps[this.currentTourStep()];
         if (step.action) step.action(); 
         
-        // 🚀 拔除長時間等待，只需要 30 毫秒讓 Angular 把畫面渲染出來即可瞬間定位
         setTimeout(() => this.updateTourPosition(), 30); 
       } else {
         this.clearHighlight();
       }
     });
+  }
+
+  openLogDetail(log: any) {
+    this.selectedLogForModal.set(log);
+  }
+
+  closeLogDetail() {
+    this.selectedLogForModal.set(null);
   }
 
   updateTourPosition() {
@@ -142,13 +152,9 @@ export class LogManagement implements OnInit {
     
     if (targetEl) {
       targetEl.classList.add('tour-highlight-active');
-      
-      // 🚀 拔除 behavior: 'smooth'，改為瞬間對齊，徹底消除捲動動畫造成的卡頓感
       targetEl.scrollIntoView({ block: 'center' });
 
-      // 🚀 拔除 500ms 的 setTimeout，現在立刻、瞬間算出座標！
       const targetRect = targetEl.getBoundingClientRect();
-      
       const tooltipEl = document.querySelector('.tour-tooltip') as HTMLElement;
       const tooltipWidth = tooltipEl ? tooltipEl.offsetWidth : 300; 
       const tooltipHeight = tooltipEl ? tooltipEl.offsetHeight : 200; 

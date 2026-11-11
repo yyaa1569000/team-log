@@ -118,7 +118,7 @@
         <button class="btn-batch-sub" (click)="selectAllCurrentPage()" [disabled]="filteredLogs().length === 0">☑️ 全選本頁</button>
         <button class="btn-batch-sub" (click)="clearSelection()" [disabled]="selectedLogIds().size === 0">取消選取</button>
         <!-- 👉 步驟4 標籤 -->
-<button 
+        <button 
           id="tour-batch" 
           class="btn-generate-ai" 
           (click)="generateSummaryFromSelection()" 
@@ -152,22 +152,29 @@
     @if (filteredLogs().length > 0) {
       <div class="log-grid">
         @for (log of paginatedLogs(); track log.id) {
-          <div class="log-card" [class.is-selected]="selectedLogIds().has(log.id)">
-            <div class="log-header">
-              <div class="log-meta">
-                <input type="checkbox" class="log-checkbox" [checked]="selectedLogIds().has(log.id)" (change)="toggleSelection(log.id)" />
-                <span class="author-badge">👤 {{ log.authorName || '未知' }}</span>
-                <span class="category-badge">{{ log.category }}</span>
-                <span class="hours-badge">⏱️ {{ log.hours }} 小時</span>
-                <span class="log-date">📅 {{ getLogDate(log) }}</span>
+          <!-- 👇 設為固定高度與排版，超出部分隱藏，並附帶查看更多按鈕 👇 -->
+          <div class="log-card" [class.is-selected]="selectedLogIds().has(log.id)" style="height: 240px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; position: relative; box-sizing: border-box;">
+            <div>
+              <div class="log-header">
+                <div class="log-meta">
+                  <input type="checkbox" class="log-checkbox" [checked]="selectedLogIds().has(log.id)" (change)="toggleSelection(log.id)" />
+                  <span class="author-badge">👤 {{ log.authorName || '未知' }}</span>
+                  <span class="category-badge">{{ log.category }}</span>
+                  <span class="hours-badge">⏱️ {{ log.hours }} 小時</span>
+                  <span class="log-date">📅 {{ getLogDate(log) }}</span>
+                </div>
+                <div class="log-actions">
+                  <button class="btn-edit" (click)="startEdit(log)" title="編輯日誌">✏️</button>
+                  <button class="btn-delete" (click)="openDeleteModal(log.id)" title="刪除日誌">🗑️</button>
+                </div>
               </div>
-              <div class="log-actions">
-                <button class="btn-edit" (click)="startEdit(log)" title="編輯日誌">✏️</button>
-                <button class="btn-delete" (click)="openDeleteModal(log.id)" title="刪除日誌">🗑️</button>
-              </div>
+              <h4 style="margin: 8px 0 4px 0; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ log.title }}</h4>
+              <p style="margin: 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; color: #4a5568; font-size: 14px; line-height: 1.5;">{{ log.content }}</p>
             </div>
-            <h4>{{ log.title }}</h4>
-            <p>{{ log.content }}</p>
+            
+            <div style="padding-top: 8px; border-top: 1px solid #edf2f7; display: flex; justify-content: flex-end; background: #fff;">
+              <button (click)="openLogDetail(log)" style="background: #3182ce; color: white; border: none; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 500;">查看更多 ▼</button>
+            </div>
           </div>
         }
       </div>
@@ -183,6 +190,34 @@
       <div class="empty-state"><p>📭 查無符合條件的工作日誌</p></div>
     }
   </div>
+
+  <!-- 👇 點擊「查看更多」後彈出的詳細內容視窗 (Modal) 👇 -->
+  @if (selectedLogForModal()) {
+    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 2000;" (click)="closeLogDetail()">
+      <div style="background: white; width: 90%; max-width: 650px; max-height: 85vh; border-radius: 12px; padding: 24px; display: flex; flex-direction: column; box-shadow: 0 10px 25px rgba(0,0,0,0.2);" (click)="$event.stopPropagation()">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #edf2f7; padding-bottom: 12px;">
+          <h3 style="margin: 0; font-size: 20px; color: #2d3748; word-break: break-all;">{{ selectedLogForModal().title }}</h3>
+          <button (click)="closeLogDetail()" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #a0aec0;">✖</button>
+        </div>
+
+        <div style="padding: 12px 0; font-size: 13px; color: #718096; display: flex; gap: 15px; flex-wrap: wrap;">
+          <span>👤 作者：{{ selectedLogForModal().authorName || '未知' }}</span>
+          <span>📂 分類：{{ selectedLogForModal().category }}</span>
+          <span>⏱️ 工時：{{ selectedLogForModal().hours }} 小時</span>
+          <span>📅 日期：{{ getLogDate(selectedLogForModal()) }}</span>
+        </div>
+
+        <div style="overflow-y: auto; flex-grow: 1; padding: 15px 0; border-top: 1px solid #edf2f7; border-bottom: 1px solid #edf2f7; margin-bottom: 15px;">
+          <p style="white-space: pre-wrap; word-break: break-all; color: #2d3748; line-height: 1.6; margin: 0; font-size: 15px;">{{ selectedLogForModal().content }}</p>
+        </div>
+
+        <div style="text-align: right;">
+          <button (click)="closeLogDetail()" style="background: #3182ce; color: white; border: none; padding: 8px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">關閉視窗</button>
+        </div>
+      </div>
+    </div>
+  }
 
   <app-confirm-modal [isOpen]="showDeleteModal()" [title]="deleteModalTitle()" [message]="deleteModalMessage()" type="danger" confirmText="確認刪除" (confirmed)="handleConfirmDelete()" (cancelled)="showDeleteModal.set(false)"></app-confirm-modal>
 
