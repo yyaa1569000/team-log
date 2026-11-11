@@ -169,7 +169,7 @@
               </div>
               <h4 style="margin: 8px 0 4px 0; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ log.title }}</h4>
               
-              <!-- 👇 加上 Overflow 指令動態偵測是否超過範圍 👇 -->
+              <!-- 👇 綁定 appOverflowCheck 指令 👇 -->
               <p appOverflowCheck (hasOverflow)="onOverflowStatusChange(log.id, $event)" style="margin: 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; color: #4a5568; font-size: 14px; line-height: 1.5;">{{ log.content }}</p>
             </div>
             

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed, HostListener, effect } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, HostListener, effect, Directive, ElementRef, AfterViewInit, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LogService } from '../../services/log';
@@ -7,12 +7,41 @@ import { AuthService } from '../../services/auth.service';
 import { forkJoin } from 'rxjs'; 
 import { LoadingService } from '../../loading.service';
 import { TutorialService } from '../../services/tutorial.service'; 
-import { OverflowCheckDirective } from '../../directives/overflow-check.directive'; // 依你的路徑調整
+
+// 👇 直接在這裡宣告 Directive，不需要另外建檔案，保證編譯成功 👇
+@Directive({
+  selector: '[appOverflowCheck]',
+  standalone: true
+})
+export class OverflowCheckDirective implements AfterViewInit {
+  @Output() hasOverflow = new EventEmitter<boolean>();
+
+  constructor(private el: ElementRef) {}
+
+  ngAfterViewInit() {
+    // 延遲一點點確保 DOM 已經完全渲染
+    setTimeout(() => this.checkOverflow(), 100);
+  }
+
+  @HostListener('window:resize')
+  onResize() {
+    this.checkOverflow();
+  }
+
+  private checkOverflow() {
+    const el = this.el.nativeElement;
+    // 判斷實際內容高度是否大於可視高度 (有設定 line-clamp 的容器)
+    this.hasOverflow.emit(el.scrollHeight > el.clientHeight);
+  }
+}
+// 👆 Directive 宣告結束 👆
+
 
 @Component({
   selector: 'app-log-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, ConfirmModalComponent],
+  // 👇 記得在這裡的 imports 陣列加入 OverflowCheckDirective 👇
+  imports: [CommonModule, FormsModule, ConfirmModalComponent, OverflowCheckDirective],
   templateUrl: './log-management.html',
   styleUrls: ['./log-management.css'],
 })
@@ -44,8 +73,15 @@ export class LogManagement implements OnInit {
 
   dailyAiSummary = signal<string | null>(null);
 
-  // 👇 新增：控制查看更多詳細內容彈出視窗的 Signal 👇
+  // 控制彈出詳細視窗
   selectedLogForModal = signal<any | null>(null);
+
+  // 👇 紀錄每一張卡片是否發生文字溢出 👇
+  overflowMap = signal<{ [key: number]: boolean }>({});
+
+  onOverflowStatusChange(id: number, status: boolean) {
+    this.overflowMap.update(map => ({ ...map, [id]: status }));
+  }
 
   tourSteps = [
     { 
@@ -77,13 +113,6 @@ export class LogManagement implements OnInit {
       action: () => this.viewMode.set('today') 
     }
   ];
-
-  // 記錄哪些卡片需要顯示「查看更多」
-  overflowMap = signal<{ [key: number]: boolean }>({});
-
-  onOverflowStatusChange(id: number, status: boolean) {
-    this.overflowMap.update(map => ({ ...map, [id]: status }));
-  }
   
   currentTourStep = signal(0);
   tooltipPos = signal({ top: 0, left: 0 });
@@ -137,7 +166,6 @@ export class LogManagement implements OnInit {
       if (this.tutorialService.isActive()) {
         const step = this.tourSteps[this.currentTourStep()];
         if (step.action) step.action(); 
-        
         setTimeout(() => this.updateTourPosition(), 30); 
       } else {
         this.clearHighlight();
