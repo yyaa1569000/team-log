@@ -357,9 +357,16 @@ export class LogManagement implements OnInit {
     this.selectedLogIds.set(new Set());
   }
 
-  submitLog() {
+submitLog() {
     if (!this.newTitle().trim() || !this.newContent().trim() || !this.newHours()) {
       this.showErrors.set(true);
+      return;
+    }
+
+    // 💡 可以在前端先加一道防線（選填），超過 1000 字直接阻擋
+    if (String(this.newContent()).length > 1000) {
+      this.warningMessage.set('詳細內容不能超過 1000 個字元！');
+      this.showWarningModal.set(true);
       return;
     }
 
@@ -370,6 +377,7 @@ export class LogManagement implements OnInit {
     const currentUser = this.authService.currentUser();
 
     if (editId) {
+      // 編輯邏輯...
       const originalLog = this.logService.logs().find((l) => l.id === editId);
       const updatedLogData = {
         ...originalLog,
@@ -383,17 +391,15 @@ export class LogManagement implements OnInit {
       this.logService.updateLog(editId, updatedLogData).subscribe({
         next: () => {
           this.isSubmitting.set(false);
-          this.loadingService.hide();
           this.toastMessage.set('✏️ 成功更新工作日誌！');
           this.cancelEdit();
           setTimeout(() => this.toastMessage.set(''), 3000);
         },
         error: (err) => {
           this.isSubmitting.set(false);
-          this.loadingService.hide();
-          // 抓取後端回傳的錯誤訊息 (例如超過 1000 字)
-          const serverMessage = err.error?.message || '更新失敗，請稍後再試。';
-          this.warningMessage.set(serverMessage);
+          // 💡 接收後端回傳的錯誤訊息並彈出警告框
+          const errorMsg = err.error?.message || '更新失敗，內容可能超過 1000 字限制！';
+          this.warningMessage.set(errorMsg);
           this.showWarningModal.set(true);
         },
       });
@@ -411,17 +417,15 @@ export class LogManagement implements OnInit {
       this.logService.addLog(newLogData).subscribe({
         next: () => {
           this.isSubmitting.set(false);
-          this.loadingService.hide();
           this.toastMessage.set('🎉 成功新增工作日誌！');
           this.cancelEdit();
           setTimeout(() => this.toastMessage.set(''), 3000);
         },
         error: (err) => {
           this.isSubmitting.set(false);
-          this.loadingService.hide();
-          // 抓取後端回傳的錯誤訊息 (例如超過 1000 字)
-          const serverMessage = err.error?.message || '寫入失敗，請稍後再試。';
-          this.warningMessage.set(serverMessage);
+          // 💡 接收後端回傳的錯誤訊息（例如「詳細內容不能超過 1000 個字元！」）並彈出警告框
+          const errorMsg = err.error?.message || '新增失敗，內容可能超過 1000 字限制！';
+          this.warningMessage.set(errorMsg);
           this.showWarningModal.set(true);
         },
       });
