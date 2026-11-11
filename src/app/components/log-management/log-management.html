@@ -78,8 +78,13 @@
 
       <div class="form-group">
         <label>詳細內容 <span class="required">*</span></label>
-        <textarea rows="3" [value]="newContent()" (input)="newContent.set($any($event.target).value)" placeholder="請說明今天完成的工作項目細節..." [class.is-invalid]="showErrors() && !newContent()"></textarea>
-        @if (showErrors() && !newContent()) { <span class="error-text">請輸入工作內容</span> }
+        <!-- 💡 加上 maxlength="1000" 限制 -->
+        <textarea rows="3" [value]="newContent()" (input)="newContent.set($any($event.target).value)" placeholder="請說明今天完成的工作項目細節..." maxlength="1000" [class.is-invalid]="showErrors() && !newContent()"></textarea>
+        <div style="display: flex; justify-content: space-between; margin-top: 4px;">
+          @if (showErrors() && !newContent()) { <span class="error-text">請輸入工作內容</span> } @else { <span></span> }
+          <!-- 即時字數統計 -->
+          <span style="font-size: 12px; color: #718096; margin-left: auto;">{{ newContent().length }} / 1000 字</span>
+        </div>
       </div>
 
       <div class="form-actions" style="display: flex; gap: 10px">
@@ -151,11 +156,9 @@
 
     @if (filteredLogs().length > 0) {
       <div class="log-grid">
-@for (log of paginatedLogs(); track log.id) {
-          <!-- 👇 修改外層卡片樣式，確保按鈕能釘在底部 👇 -->
+        @for (log of paginatedLogs(); track log.id) {
           <div class="log-card" [class.is-selected]="selectedLogIds().has(log.id)" style="height: 240px; display: flex; flex-direction: column; overflow: hidden; position: relative; box-sizing: border-box; padding-bottom: 0;">
             
-            <!-- 上方固定區塊 (包含 Meta 與標題) -->
             <div style="flex-shrink: 0;">
               <div class="log-header">
                 <div class="log-meta">
@@ -173,12 +176,10 @@
               <h4 style="margin: 8px 0 4px 0; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ log.title }}</h4>
             </div>
 
-            <!-- 👇 內文區塊：設定 flex-grow: 1 與 min-height: 0，自動吸收剩餘空間 👇 -->
             <div style="flex-grow: 1; min-height: 0; overflow: hidden;">
               <p appOverflowCheck (hasOverflow)="onOverflowStatusChange(log.id, $event)" style="margin: 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; color: #4a5568; font-size: 14px; line-height: 1.5; word-break: break-all;">{{ log.content }}</p>
             </div>
             
-            <!-- 👇 底部按鈕區塊：設定 flex-shrink: 0 確保高度不會被擠壓 👇 -->
             <div style="flex-shrink: 0; padding: 8px 0; border-top: 1px solid #edf2f7; display: flex; justify-content: flex-end; background: #fff; min-height: 32px; box-sizing: border-box;">
               @if (overflowMap()[log.id]) {
                 <button (click)="openLogDetail(log)" style="background: #3182ce; color: white; border: none; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 500;">查看更多 ▼</button>
@@ -200,7 +201,6 @@
     }
   </div>
 
-  <!-- 👇 點擊「查看更多」後彈出的詳細內容視窗 (Modal) 👇 -->
   @if (selectedLogForModal()) {
     <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 2000;" (click)="closeLogDetail()">
       <div style="background: white; width: 90%; max-width: 650px; max-height: 85vh; border-radius: 12px; padding: 24px; display: flex; flex-direction: column; box-shadow: 0 10px 25px rgba(0,0,0,0.2);" (click)="$event.stopPropagation()">
@@ -234,7 +234,6 @@
     <app-confirm-modal [isOpen]="showWarningModal()" title="提示" [message]="warningMessage()" confirmText="好" type="success" [showCancel]="false" (confirmed)="closeWarningModal()" (cancelled)="closeWarningModal()"></app-confirm-modal>
   }
 
-  <!-- 👇 導覽小視窗 UI 👇 -->
   @if (tutorialService.isActive()) {
     <div class="tour-backdrop" (click)="tutorialService.stopTutorial()"></div>
     <div class="tour-tooltip" [style.top.px]="tooltipPos().top" [style.left.px]="tooltipPos().left" [class]="tourSteps[currentTourStep()].position">

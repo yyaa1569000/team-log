@@ -8,7 +8,6 @@ import { forkJoin } from 'rxjs';
 import { LoadingService } from '../../loading.service';
 import { TutorialService } from '../../services/tutorial.service'; 
 
-// 👇 終極版：自動偵測文字溢出的 Directive 👇
 @Directive({
   selector: '[appOverflowCheck]',
   standalone: true
@@ -20,22 +19,16 @@ export class OverflowCheckDirective implements AfterViewInit, OnDestroy {
   constructor(private el: ElementRef) {}
 
   ngAfterViewInit() {
-    // 使用現代瀏覽器原生的 ResizeObserver，只要元素大小、內容或排版一改變，就會自動觸發！絕對精準。
     this.observer = new ResizeObserver(() => {
       this.checkOverflow();
     });
     this.observer.observe(this.el.nativeElement);
-    
-    // 初始強制檢查一次 (給一點延遲確保資料已綁定)
     setTimeout(() => this.checkOverflow(), 200);
   }
 
   private checkOverflow() {
     const el = this.el.nativeElement;
-    // 判斷：實際內容高度 > 可視高度 (加 2px 容錯，避免小數點運算誤差)
     const isOverflowing = el.scrollHeight > (el.clientHeight + 2);
-    
-    // 💡 使用 Promise.resolve().then() 避免 Angular 報錯 "ExpressionChangedAfterItHasBeenCheckedError"
     Promise.resolve().then(() => {
       this.hasOverflow.emit(isOverflowing);
     });
@@ -47,8 +40,6 @@ export class OverflowCheckDirective implements AfterViewInit, OnDestroy {
     }
   }
 }
-// 👆 Directive 宣告結束 👆
-
 
 @Component({
   selector: 'app-log-management',
@@ -84,11 +75,7 @@ export class LogManagement implements OnInit {
   deletingLogId = signal<number | null>(null);
 
   dailyAiSummary = signal<string | null>(null);
-
-  // 控制彈出詳細視窗
   selectedLogForModal = signal<any | null>(null);
-
-  // 紀錄每一張卡片是否發生文字溢出
   overflowMap = signal<{ [key: number]: boolean }>({});
 
   onOverflowStatusChange(id: number, status: boolean) {
@@ -96,34 +83,10 @@ export class LogManagement implements OnInit {
   }
 
   tourSteps = [
-    { 
-      id: 'tour-tab-today', 
-      title: '✨ 1. 今日工作填寫', 
-      content: '點擊此頁籤，可以切換到「今日模式」，在這裡填寫您今天最新的工作日誌。', 
-      position: 'bottom',
-      action: () => this.viewMode.set('today') 
-    },
-    { 
-      id: 'tour-tab-history', 
-      title: '✨ 2. 歷史紀錄查詢', 
-      content: '點擊此頁籤，可以切換到「歷史模式」，利用日期篩選器來查詢過去所有的歷史紀錄。', 
-      position: 'bottom',
-      action: () => this.viewMode.set('history') 
-    },
-    { 
-      id: 'tour-submit', 
-      title: '✨ 3. 提交日誌', 
-      content: '在今日模式下填寫完標題、工時與內容後，點擊「提交日誌」按鈕即可送出。', 
-      position: 'top',
-      action: () => this.viewMode.set('today') 
-    },
-    { 
-      id: 'tour-batch', 
-      title: '✨ 4. AI 智慧總結', 
-      content: '【請先勾選項目】：想產生總結時，請先在下方列表勾選特定日誌（打勾），接著點擊此按鈕，AI 就會幫你把勾選的項目匯整成一份精美報告！', 
-      position: 'top', 
-      action: () => this.viewMode.set('today') 
-    }
+    { id: 'tour-tab-today', title: '✨ 1. 今日工作填寫', content: '點擊此頁籤，可以切換到「今日模式」，在這裡填寫您今天最新的工作日誌。', position: 'bottom', action: () => this.viewMode.set('today') },
+    { id: 'tour-tab-history', title: '✨ 2. 歷史紀錄查詢', content: '點擊此頁籤，可以切換到「歷史模式」，利用日期篩選器來查詢過去所有的歷史紀錄。', position: 'bottom', action: () => this.viewMode.set('history') },
+    { id: 'tour-submit', title: '✨ 3. 提交日誌', content: '在今日模式下填寫完標題、工時與內容後，點擊「提交日誌」按鈕即可送出。', position: 'top', action: () => this.viewMode.set('today') },
+    { id: 'tour-batch', title: '✨ 4. AI 智慧總結', content: '【請先勾選項目】：想產生總結時，請先在下方列表勾選特定日誌（打勾），接著點擊此按鈕，AI 就會幫你把勾選的項目匯整成一份精美報告！', position: 'top', action: () => this.viewMode.set('today') }
   ];
   
   currentTourStep = signal(0);
@@ -420,13 +383,18 @@ export class LogManagement implements OnInit {
       this.logService.updateLog(editId, updatedLogData).subscribe({
         next: () => {
           this.isSubmitting.set(false);
+          this.loadingService.hide();
           this.toastMessage.set('✏️ 成功更新工作日誌！');
           this.cancelEdit();
           setTimeout(() => this.toastMessage.set(''), 3000);
         },
         error: (err) => {
           this.isSubmitting.set(false);
-          console.error('更新失敗：', err);
+          this.loadingService.hide();
+          // 抓取後端回傳的錯誤訊息 (例如超過 1000 字)
+          const serverMessage = err.error?.message || '更新失敗，請稍後再試。';
+          this.warningMessage.set(serverMessage);
+          this.showWarningModal.set(true);
         },
       });
     } else {
@@ -443,13 +411,18 @@ export class LogManagement implements OnInit {
       this.logService.addLog(newLogData).subscribe({
         next: () => {
           this.isSubmitting.set(false);
+          this.loadingService.hide();
           this.toastMessage.set('🎉 成功新增工作日誌！');
           this.cancelEdit();
           setTimeout(() => this.toastMessage.set(''), 3000);
         },
         error: (err) => {
           this.isSubmitting.set(false);
-          console.error('寫入失敗：', err);
+          this.loadingService.hide();
+          // 抓取後端回傳的錯誤訊息 (例如超過 1000 字)
+          const serverMessage = err.error?.message || '寫入失敗，請稍後再試。';
+          this.warningMessage.set(serverMessage);
+          this.showWarningModal.set(true);
         },
       });
     }
